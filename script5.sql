@@ -1,0 +1,1 @@
+ALTER TABLE sales ALTER COLUMN quantity SET NOT NULL;

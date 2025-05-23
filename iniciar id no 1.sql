@@ -1,0 +1,1 @@
+ALTER SEQUENCE sales_id_seq RESTART WITH 1;

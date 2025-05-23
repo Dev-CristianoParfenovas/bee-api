@@ -1,0 +1,2 @@
+ALTER TABLE sales
+ADD COLUMN tipovenda INTEGER DEFAULT 0;
