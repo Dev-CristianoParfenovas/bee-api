@@ -2,7 +2,7 @@ import serviceProducts from "../services/service.products.js";
 import { updateProductAndStockService } from "../services/service.products.js";
 
 // Obter todos os produtos de um cliente
-const getProducts = async (req, res) => {
+/*const getProducts = async (req, res) => {
   const { company_id } = req.params;
   const { search } = req.query; // Pegando o parâmetro de pesquisa da query string
 
@@ -26,6 +26,23 @@ const getProducts = async (req, res) => {
     console.error("Erro ao buscar produtos:", err.message);
     res.status(500).json({ error: err.message });
   }
+};*/
+const getProducts = async (req, res) => {
+  const { company_id } = req.params;
+  const { search } = req.query;
+
+  try {
+    const products = await serviceProducts.getProductsByClient(
+      company_id,
+      search
+    );
+
+    // products sempre será array, pode ser vazio
+    return res.status(200).json(products);
+  } catch (err) {
+    console.error("Erro ao buscar produtos:", err.message);
+    return res.status(500).json({ error: err.message });
+  }
 };
 
 const createOrUpdateProduct = async (req, res) => {
@@ -41,19 +58,6 @@ const createOrUpdateProduct = async (req, res) => {
     aliquota,
     cfop,
   } = req.body;
-
-  console.log("Dados recebidos no controller:", {
-    id,
-    name,
-    category_id,
-    price,
-    company_id,
-    stock,
-    barcode,
-    ncm,
-    aliquota,
-    cfop,
-  });
 
   try {
     const result = await serviceProducts.upsertProduct({

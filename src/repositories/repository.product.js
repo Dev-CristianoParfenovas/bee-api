@@ -7,13 +7,13 @@ const getProductsByClient = async (company_id, search = "") => {
     FROM products p
     LEFT JOIN stock s ON p.id = s.product_id
     WHERE p.company_id = $1
-    AND p.name ILIKE $2  -- ILIKE para busca não sensível a maiúsculas/minúsculas
+    AND p.name ILIKE $2
   `;
-  const values = [company_id, `%${search}%`]; // Envolva o termo de busca com % para buscar qualquer parte do nome
+  const values = [company_id, `%${search}%`];
 
   try {
     const result = await pool.query(query, values);
-    return result.rows.length ? result.rows : null;
+    return result.rows; // sempre retorna array, vazio se nada encontrado
   } catch (error) {
     console.error("Erro ao buscar produtos: ", error);
     throw new Error("Erro ao buscar produtos");

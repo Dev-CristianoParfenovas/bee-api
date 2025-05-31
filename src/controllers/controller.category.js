@@ -49,42 +49,17 @@ const getCategoriesByCompanyIdController = async (req, res) => {
     );
 
     if (categories.length === 0) {
-      // Retorna status 200 com mensagem informativa
       console.log(`Nenhuma categoria encontrada para a empresa ${company_id}`);
-      return res.status(200).json({
-        message: "Nenhuma categoria cadastrada no momento.",
-        data: [], // Array vazio para consistência
-      });
+      return res.status(200).json({ data: [] }); // Retorna array vazio sem mensagem extra
     }
 
-    // Retorna os clientes encontrados
-    res.status(200).json({ data: categories });
+    return res.status(200).json({ data: categories });
   } catch (error) {
     console.error("Erro ao buscar categorias no controlador:", error.message);
-    res
-      .status(500)
-      .json({
-        error: "Erro ao buscar categorias. Tente novamente mais tarde.",
-      });
-  }
-  /*  try {
-    const companyId = req.params.company_id;
-    console.log("Buscando categorias para company_id:", companyId);
-
-    const categories = await Category.find({
-      where: { company_id: companyId },
+    return res.status(500).json({
+      error: "Erro ao buscar categorias. Tente novamente mais tarde.",
     });
-    console.log("Categorias encontradas:", categories);
-
-    if (categories.length === 0) {
-      return res.status(404).json({ message: "Categoria não encontrada" });
-    }
-
-    return res.status(200).json(categories);
-  } catch (error) {
-    console.error("Erro ao buscar categorias:", error);
-    return res.status(500).json({ message: "Erro interno do servidor" });
-  }*/
+  }
 };
 
 const updateCategoryController = async (req, res) => {
