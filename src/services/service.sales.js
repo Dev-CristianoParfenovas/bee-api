@@ -1,5 +1,5 @@
 import salesRepository from "../repositories/repository.sales.js";
-import stockRepository from "../repositories/repository.sales.js";
+//import stockRepository from "../repositories/repository.sales.js";
 
 /*const createSaleService = async (saleData) => {
   // Validação de quantity
@@ -34,7 +34,8 @@ const createSaleService = async (saleData) => {
   }
 
   // Chama o repositório para salvar as vendas no banco
-  return await salesRepository.createSale(saleData);
+  const result = await salesRepository.createSale(saleData);
+  return result;
 };
 
 const getSalesByCompanyIdService = async (company_id) => {

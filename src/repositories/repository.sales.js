@@ -73,7 +73,7 @@ import pool from "../db/connection.js";
   return await processSale(saleData);
 };*/
 
-const createSale = async (saleData) => {
+/*020625const createSale = async (saleData) => {
   // Função para verificar e atualizar o estoque
   const handleStockUpdate = async (productId, companyId, quantity) => {
     const stockQuery = `
@@ -122,7 +122,8 @@ const createSale = async (saleData) => {
     ]);
 
     if (productResult.rows.length === 0) {
-      throw new Error(`Produto com ID ${sale.product_id} não encontrado.`);
+      // throw new Error(`Produto com ID ${sale.product_id} não encontrado.`);
+      throw new Error(`Produto não encontrado ou não pertence à empresa.`);
     }
 
     const productPrice = parseFloat(productResult.rows[0].price);
@@ -161,6 +162,177 @@ const createSale = async (saleData) => {
 
   // Processar uma única venda
   return await processSale(saleData);
+};*/
+
+/* sugestao do gptconst createSale = async (req, res) => {
+  const sales = Array.isArray(salesData) ? salesData : [salesData];
+
+  const client = await pool.connect(); // Pega uma conexão para a transação
+
+  try {
+    await client.query("BEGIN"); // Inicia a transação
+
+    for (const sale of sales) {
+      const productResult = await client.query(
+        "SELECT price, stock FROM products WHERE id = $1 AND company_id = $2",
+        [sale.product_id, sale.company_id]
+      );
+
+      if (productResult.rows.length === 0) {
+        throw new Error(`Produto não encontrado para o ID ${sale.product_id}`);
+      }
+
+      const product = productResult.rows[0];
+      const productPrice = parseFloat(product.price);
+      const currentStock = parseInt(product.stock);
+      const saleQuantity = parseInt(sale.quantity);
+
+      if (saleQuantity > currentStock) {
+        throw new Error(
+          `Estoque insuficiente para o produto ID ${sale.product_id}`
+        );
+      }
+
+      const totalPrice = productPrice * saleQuantity;
+      const saleDate = new Date();
+
+      await client.query(
+        `INSERT INTO sales (company_id, product_id, id_client, employee_id, quantity, total_price, date, tipovenda)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [
+          sale.company_id,
+          sale.product_id,
+          sale.id_client,
+          sale.employee_id,
+          saleQuantity,
+          parseFloat(totalPrice.toFixed(2)),
+          saleDate,
+          sale.tipovenda || 0,
+        ]
+      );
+
+      const newStock = currentStock - saleQuantity;
+      await client.query(
+        "UPDATE products SET stock = $1 WHERE id = $2 AND company_id = $3",
+        [newStock, sale.product_id, sale.company_id]
+      );
+    }
+
+    await client.query("COMMIT"); // Confirma todas as mudanças
+    res.status(201).json({ message: "Venda(s) registrada(s) com sucesso" });
+  } catch (error) {
+    await client.query("ROLLBACK"); // Reverte tudo em caso de erro
+    console.error("Erro ao registrar venda:", error);
+    res.status(500).json({ error: error.message });
+  } finally {
+    client.release(); // Libera a conexão de volta ao pool
+  }
+};020625*/
+
+const createSale = async (saleData) => {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN"); // Inicia transação
+
+    // Função para verificar e atualizar estoque dentro da transação
+    const handleStockUpdate = async (productId, companyId, quantity) => {
+      const stockQuery = `
+        SELECT quantity FROM stock WHERE product_id = $1 AND company_id = $2 FOR UPDATE
+      `;
+      // FOR UPDATE bloqueia a linha para evitar race conditions
+      const stockResult = await client.query(stockQuery, [
+        productId,
+        companyId,
+      ]);
+
+      if (stockResult.rows.length === 0) {
+        throw new Error(
+          `Estoque do produto com ID ${productId} não encontrado.`
+        );
+      }
+
+      const currentStock = stockResult.rows[0].quantity;
+      if (currentStock < quantity) {
+        throw new Error(
+          `Estoque insuficiente para o produto com ID ${productId}.`
+        );
+      }
+
+      const updateStockQuery = `
+        UPDATE stock SET quantity = quantity - $1
+        WHERE product_id = $2 AND company_id = $3
+      `;
+      await client.query(updateStockQuery, [quantity, productId, companyId]);
+    };
+
+    // Função que processa uma venda individual dentro da transação
+    const processSale = async (sale) => {
+      await handleStockUpdate(sale.product_id, sale.company_id, sale.quantity);
+
+      let saleDate = sale.sale_date;
+      if (!saleDate) {
+        saleDate = new Date().toISOString();
+      } else if (isNaN(new Date(saleDate).getTime())) {
+        throw new Error("Formato de data inválido para sale_date.");
+      }
+
+      const productQuery = `
+        SELECT price FROM products WHERE id = $1 AND company_id = $2
+      `;
+      const productResult = await client.query(productQuery, [
+        sale.product_id,
+        sale.company_id,
+      ]);
+
+      if (productResult.rows.length === 0) {
+        throw new Error(`Produto não encontrado ou não pertence à empresa.`);
+      }
+
+      const productPrice = parseFloat(productResult.rows[0].price);
+      if (isNaN(productPrice)) {
+        throw new Error("Preço do produto inválido.");
+      }
+
+      const totalPrice = productPrice * sale.quantity;
+
+      const query = `
+        INSERT INTO sales (company_id, product_id, id_client, employee_id, quantity, total_price, sale_date, tipovenda)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING *;
+      `;
+      const values = [
+        sale.company_id,
+        sale.product_id,
+        sale.id_client,
+        sale.employee_id,
+        parseFloat(sale.quantity),
+        parseFloat(totalPrice.toFixed(2)),
+        saleDate,
+        sale.tipovenda || 0,
+      ];
+
+      const result = await client.query(query, values);
+      return result.rows[0];
+    };
+
+    // Se for array, processa todas as vendas
+    let insertedSales;
+    if (Array.isArray(saleData)) {
+      const salePromises = saleData.map(processSale);
+      insertedSales = await Promise.all(salePromises);
+    } else {
+      insertedSales = [await processSale(saleData)];
+    }
+
+    await client.query("COMMIT"); // Confirma transação
+    return insertedSales;
+  } catch (error) {
+    await client.query("ROLLBACK"); // Desfaz tudo se erro
+    throw error;
+  } finally {
+    client.release();
+  }
 };
 
 const getSalesByCompanyId = async (company_id, tipovenda) => {
