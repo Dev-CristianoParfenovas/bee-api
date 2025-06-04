@@ -210,6 +210,43 @@ const getSalesByDateRangeController = async (req, res) => {
   }
 };
 
+const getSalesByVehicleIdController = async (req, res) => {
+  try {
+    const { company_id, vehicle_id } = req.params;
+
+    console.log(
+      "Buscando vendas para vehicle_id:",
+      vehicle_id,
+      "company_id:",
+      company_id
+    );
+
+    if (!company_id || !vehicle_id) {
+      return res
+        .status(400)
+        .json({ message: "company_id e vehicle_id são obrigatórios." });
+    }
+
+    const sales = await salesService.getSalesByVehicleIdService(
+      company_id,
+      vehicle_id
+    );
+
+    if (!sales || sales.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "Nenhuma venda encontrada para esse veículo." });
+    }
+
+    return res.status(200).json(sales);
+  } catch (error) {
+    console.error("Erro ao buscar vendas por veículo:", error);
+    return res
+      .status(500)
+      .json({ message: "Erro interno do servidor", error: error.message });
+  }
+};
+
 const updateSaleController = async (req, res) => {
   try {
     const { id, company_id } = req.params;
@@ -246,6 +283,7 @@ export default {
   getSalesByCompanyIdController,
   getSaleByIdAndCompanyIdController,
   getSalesByDateRangeController,
+  getSalesByVehicleIdController,
   updateSaleController,
   deleteSaleController,
 };

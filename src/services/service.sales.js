@@ -152,6 +152,18 @@ const getSalesByDateRangeService = async ({
   return sales;
 };
 
+const getSalesByVehicleIdService = async (company_id, vehicle_id) => {
+  if (!company_id || !vehicle_id) {
+    throw new Error("company_id e vehicle_id são obrigatórios.");
+  }
+
+  const sales = await salesRepository.getSalesByVehicleId(
+    company_id,
+    vehicle_id
+  );
+  return sales;
+};
+
 const updateSaleService = async (id, company_id, saleData) => {
   return await salesRepository.updateSaleById(id, company_id, saleData);
 };
@@ -165,6 +177,7 @@ export default {
   getSalesByCompanyIdService,
   getSaleByIdAndCompanyIdService,
   getSalesByDateRangeService,
+  getSalesByVehicleIdService,
   updateSaleService,
   deleteSaleService,
 };

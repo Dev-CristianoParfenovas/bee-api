@@ -27,6 +27,11 @@ routersales.get(
   salesController.getSaleByIdAndCompanyIdController
 );
 
+routersales.get(
+  "/:company_id/vehicle/:vehicle_id",
+  salesController.getSalesByVehicleIdController
+);
+
 routersales.put(
   "/sales/:company_id/:id",
   jwt.validateJWT,

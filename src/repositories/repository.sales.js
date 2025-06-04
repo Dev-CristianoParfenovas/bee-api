@@ -157,7 +157,7 @@ import pool from "../db/connection.js";
   // Se for um array de vendas, processar todas
   if (Array.isArray(saleData)) {
     const salePromises = saleData.map(processSale);
-    return await Promise.all(salePromises);
+    return await Promise.all(salePromises); 
   }
 
   // Processar uma única venda
@@ -421,6 +421,16 @@ const getSalesByDateRange = async ({
   return rows;
 };
 
+const getSalesByVehicleId = async (company_id, vehicle_id) => {
+  const query = `
+    SELECT sales.*
+    FROM sales
+    WHERE sales.company_id = $1 AND sales.vehicle_id = $2
+  `;
+  const result = await pool.query(query, [company_id, vehicle_id]);
+  return result.rows;
+};
+
 const updateSaleById = async (id, company_id, saleData) => {
   const query = `
     UPDATE sales
@@ -450,6 +460,7 @@ export default {
   createSale,
   getSalesByCompanyId,
   getSalesByDateRange,
+  getSalesByVehicleId,
   getSaleByIdAndCompanyId,
   updateSaleById,
   deleteSaleById,
