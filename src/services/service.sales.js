@@ -127,19 +127,11 @@ const getSalesByDateRangeService = async ({
   endDate,
   employee_id,
   client_id,
+  vehicle_id,
 }) => {
-  console.log("Service - Parâmetros recebidos:", {
-    company_id,
-    startDate,
-    endDate,
-    employee_id,
-    client_id,
-  });
-
   const employeeFilter = employee_id ? parseInt(employee_id, 10) : null;
-  console.log("Service - Employee ID processado:", employeeFilter);
-
   const clientFilter = client_id ? parseInt(client_id, 10) : null;
+  const vehicleFilter = vehicle_id ? parseInt(vehicle_id, 10) : null;
 
   const sales = await salesRepository.getSalesByDateRange({
     company_id,
@@ -147,6 +139,7 @@ const getSalesByDateRangeService = async ({
     endDate,
     employee_id: employeeFilter,
     client_id: clientFilter,
+    vehicle_id: vehicleFilter,
   });
 
   return sales;

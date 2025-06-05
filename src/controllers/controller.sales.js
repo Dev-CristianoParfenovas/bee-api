@@ -184,8 +184,16 @@ const getSaleByIdAndCompanyIdController = async (req, res) => {
 
 const getSalesByDateRangeController = async (req, res) => {
   try {
-    const { company_id } = req.params;
-    const { startDate, endDate, employee_id, client_id } = req.query;
+    const { company_id, vehicle_id: vehicle_id_param } = req.params;
+    const {
+      startDate,
+      endDate,
+      employee_id,
+      client_id,
+      vehicle_id: vehicle_id_query,
+    } = req.query;
+
+    const vehicle_id = vehicle_id_param || vehicle_id_query || null;
 
     console.log("Parâmetros recebidos no controller:", {
       company_id,
@@ -193,6 +201,7 @@ const getSalesByDateRangeController = async (req, res) => {
       endDate,
       employeeId: employee_id,
       clientId: client_id,
+      vehicle_id,
     });
 
     const sales = await salesService.getSalesByDateRangeService({
@@ -201,6 +210,7 @@ const getSalesByDateRangeController = async (req, res) => {
       endDate,
       employee_id: employee_id || null,
       client_id: client_id || null,
+      vehicle_id: vehicle_id || null,
     });
 
     return res.status(200).json(sales);

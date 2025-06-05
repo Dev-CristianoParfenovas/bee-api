@@ -381,14 +381,14 @@ const getSaleByIdAndCompanyId = async (id, company_id) => {
   return rows;
 };*/
 
-const getSalesByDateRange = async ({
+/*050625const getSalesByDateRange = async ({
   company_id,
   startDate,
   endDate,
   employee_id,
   client_id,
+  vehicle_id,
 }) => {
-  // Inicializando a query com as condições básicas
   let query = `
     SELECT
       sales.*,
@@ -403,16 +403,64 @@ const getSalesByDateRange = async ({
 
   const values = [company_id, startDate, endDate];
 
-  // Condicional para o filtro de funcionário
   if (employee_id) {
     query += ` AND sales.employee_id = $${values.length + 1}`;
     values.push(employee_id);
   }
 
-  // Condicional para o filtro de cliente
   if (client_id) {
     query += ` AND sales.id_client = $${values.length + 1}`;
     values.push(client_id);
+  }
+
+  if (vehicle_id) {
+    query += ` AND sales.id_vehicle = $${values.length + 1}`;
+    values.push(vehicle_id);
+  }
+
+  console.log("Query gerada no repositório:", query, values);
+
+  const { rows } = await pool.query(query, values);
+  return rows;
+};050625*/
+
+const getSalesByDateRange = async ({
+  company_id,
+  startDate,
+  endDate,
+  employee_id,
+  client_id,
+  vehicle_id,
+}) => {
+  let query = `
+    SELECT
+      sales.*,
+      clients.name AS client_name,
+      employees.name AS employee_name
+    FROM sales
+    LEFT JOIN clients ON sales.id_client = clients.id_client
+    LEFT JOIN employees ON sales.employee_id = employees.id_employee   
+    LEFT JOIN service_vehicles ON sales.id = service_vehicles.sale_id    
+    WHERE sales.company_id = $1
+      AND sales.sale_date BETWEEN $2 AND $3
+  `;
+
+  const values = [company_id, startDate, endDate];
+
+  if (employee_id) {
+    query += ` AND sales.employee_id = $${values.length + 1}`;
+    values.push(employee_id);
+  }
+
+  if (client_id) {
+    query += ` AND sales.id_client = $${values.length + 1}`;
+    values.push(client_id);
+  }
+
+  // Agora, o filtro por vehicle_id usará a coluna da tabela service_vehicles
+  if (vehicle_id) {
+    query += ` AND service_vehicles.vehicle_id = $${values.length + 1}`;
+    values.push(vehicle_id);
   }
 
   console.log("Query gerada no repositório:", query, values);
@@ -421,6 +469,7 @@ const getSalesByDateRange = async ({
   return rows;
 };
 
+//POR ID DO VEÍCULO
 const getSalesByVehicleId = async (company_id, vehicle_id) => {
   const query = `
     SELECT sales.*

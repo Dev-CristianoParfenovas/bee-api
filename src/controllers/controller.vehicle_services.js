@@ -2,14 +2,29 @@ import serviceVehiclesService from "../services/service.vehicle_services.js";
 
 // Criação de um novo registro de serviço de veículo
 const createVehicleServiceController = async (req, res) => {
-  const { sale_id, license_plate, km, company_id, employee_id, client_id } =
-    req.body;
+  const {
+    sale_id,
+    license_plate,
+    model,
+    km,
+    company_id,
+    employee_id,
+    client_id,
+  } = req.body;
 
   try {
     const client = req.pgClient; // usando o client da transação, se necessário
     const vehicleservices =
       await serviceVehiclesService.createVehicleServiceService(
-        { sale_id, license_plate, km, company_id, employee_id, client_id },
+        {
+          sale_id,
+          license_plate,
+          model,
+          km,
+          company_id,
+          employee_id,
+          client_id,
+        },
         client
       );
 
