@@ -55,14 +55,23 @@ import pool from "../db/connection.js";
 };*/
 
 const createVehicleService = async (
-  { sale_id, license_plate, model, km, company_id, employee_id, client_id },
+  {
+    sale_id,
+    license_plate,
+    model,
+    km,
+    company_id,
+    employee_id,
+    client_id,
+    vehicle_id,
+  },
   client // <- se estiver usando transação
 ) => {
   const query = `
       INSERT INTO service_vehicles (
-        sale_id, license_plate, model, km, company_id, employee_id, client_id, next_oil_change
+        sale_id, license_plate, model, km, company_id, employee_id, client_id, vehicle_id, next_oil_change
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, NOW() + INTERVAL '6 months')
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW() + INTERVAL '6 months')
       RETURNING *
     `;
 
@@ -74,6 +83,7 @@ const createVehicleService = async (
     parseInt(company_id),
     parseInt(employee_id),
     parseInt(client_id),
+    parseInt(vehicle_id),
   ];
 
   console.log("Valores para inserção:", values);

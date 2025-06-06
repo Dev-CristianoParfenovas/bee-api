@@ -436,7 +436,8 @@ const getSalesByDateRange = async ({
     SELECT
       sales.*,
       clients.name AS client_name,
-      employees.name AS employee_name
+      employees.name AS employee_name,
+      service_vehicles.model AS model
     FROM sales
     LEFT JOIN clients ON sales.id_client = clients.id_client
     LEFT JOIN employees ON sales.employee_id = employees.id_employee   

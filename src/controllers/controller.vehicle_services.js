@@ -10,6 +10,7 @@ const createVehicleServiceController = async (req, res) => {
     company_id,
     employee_id,
     client_id,
+    vehicle_id,
   } = req.body;
 
   try {
@@ -24,6 +25,7 @@ const createVehicleServiceController = async (req, res) => {
           company_id,
           employee_id,
           client_id,
+          vehicle_id,
         },
         client
       );
