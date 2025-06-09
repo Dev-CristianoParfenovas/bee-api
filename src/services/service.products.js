@@ -1,5 +1,5 @@
 import productRepository from "../repositories/repository.product.js";
-
+import stockRepository from "../repositories/repository.product.js";
 const getProductsByClient = async (company_id, search) => {
   try {
     const products = await productRepository.getProductsByClient(
@@ -11,6 +11,18 @@ const getProductsByClient = async (company_id, search) => {
     console.error("Erro no serviço de busca de produtos:", err);
     throw new Error("Erro ao buscar produtos");
   }
+};
+
+const getStockQuantity = async (product_id, company_id) => {
+  if (!product_id || !company_id) {
+    throw new Error("Produto e empresa são obrigatórios");
+  }
+
+  const quantity = await stockRepository.getStockQuantityByProduct(
+    product_id,
+    company_id
+  );
+  return quantity;
 };
 
 // Exemplo de como o serviço upsertProduct poderia ser estruturado
@@ -135,6 +147,7 @@ const deleteProductService = async (product_id, company_id) => {
 export default {
   getProductsByClient,
   upsertProduct,
+  getStockQuantity,
   updateProductAndStockService,
   deleteProductService,
 };

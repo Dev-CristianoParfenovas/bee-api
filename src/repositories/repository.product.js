@@ -236,6 +236,24 @@ const updateProductAndStock = async (
   }
 };
 
+const getStockQuantityByProduct = async (product_id, company_id) => {
+  const query = `
+    SELECT quantity FROM stock
+    WHERE product_id = $1 AND company_id = $2
+  `;
+  const values = [product_id, company_id];
+  try {
+    const result = await pool.query(query, values);
+    return result.rows[0]?.quantity ?? 0;
+  } catch (err) {
+    console.error(
+      "Erro ao buscar quantidade de estoque no banco:",
+      err.message
+    );
+    throw err; // reenvia o erro original
+  }
+};
+
 // Função para excluir produto e seu estoque
 const deleteProductAndStock = async (product_id, company_id) => {
   const client = await pool.connect();
@@ -291,6 +309,7 @@ export default {
   getProductsByClient,
   upsertProductAndStock,
   updateProductAndStock,
+  getStockQuantityByProduct,
   deleteProductAndStock,
   findProductByNameAndCompany,
 };

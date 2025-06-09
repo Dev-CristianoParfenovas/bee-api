@@ -1,5 +1,6 @@
 import serviceProducts from "../services/service.products.js";
 import { updateProductAndStockService } from "../services/service.products.js";
+import stockService from "../services/service.products.js";
 
 // Obter todos os produtos de um cliente
 /*const getProducts = async (req, res) => {
@@ -41,6 +42,28 @@ const getProducts = async (req, res) => {
     return res.status(200).json(products);
   } catch (err) {
     console.error("Erro ao buscar produtos:", err.message);
+    return res.status(500).json({ error: err.message });
+  }
+};
+
+const getStockQuantity = async (req, res) => {
+  const { product_id, company_id } = req.params;
+  console.log("REQ PARAMS:", { product_id, company_id });
+
+  if (!product_id || !company_id) {
+    return res
+      .status(400)
+      .json({ error: "product_id e company_id são obrigatórios" });
+  }
+
+  try {
+    const quantity = await stockService.getStockQuantity(
+      product_id,
+      company_id
+    );
+    return res.status(200).json({ quantity });
+  } catch (err) {
+    console.error("Erro no controller ao buscar quantidade de estoque:", err);
     return res.status(500).json({ error: err.message });
   }
 };
@@ -192,6 +215,7 @@ const deleteProductController = async (req, res) => {
 export default {
   getProducts,
   createOrUpdateProduct,
+  getStockQuantity,
   updateProductAndStockController,
   deleteProductController,
 };

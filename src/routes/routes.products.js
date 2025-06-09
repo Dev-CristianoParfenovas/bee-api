@@ -11,6 +11,12 @@ routerproduct.get(
   productController.getProducts
 );
 
+routerproduct.get(
+  "/stock/:company_id/:product_id",
+  jwt.validateJWT,
+  productController.getStockQuantity
+);
+
 // Rota para criar um novo produto
 routerproduct.post(
   "/products",
