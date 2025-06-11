@@ -31,6 +31,11 @@ routerproduct.put(
   productController.updateProductAndStockController
 );
 
+routerproduct.put(
+  "/update-stock-by-barcode",
+  productController.updateStockByBarcode
+);
+
 // Rota para excluir um produto e seu estoque
 routerproduct.delete(
   "/products/:productId",

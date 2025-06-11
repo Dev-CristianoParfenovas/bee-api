@@ -13,6 +13,25 @@ const getProductsByClient = async (company_id, search) => {
   }
 };
 
+//ATUALIZA ESTOQUE DO PRODUTO UTILIZANDO O CÓDIGO DE BARRAS
+const updateStockByBarcode = async (barcode, quantityToAdd, company_id) => {
+  try {
+    const stock = await productRepository.updateStockByBarcode(
+      barcode,
+      quantityToAdd,
+      company_id
+    );
+
+    return stock;
+  } catch (error) {
+    console.error(
+      "Erro no serviço ao atualizar estoque por código de barras:",
+      error.message
+    );
+    throw error;
+  }
+};
+
 const getStockQuantity = async (product_id, company_id) => {
   if (!product_id || !company_id) {
     throw new Error("Produto e empresa são obrigatórios");
@@ -147,6 +166,7 @@ const deleteProductService = async (product_id, company_id) => {
 export default {
   getProductsByClient,
   upsertProduct,
+  updateStockByBarcode,
   getStockQuantity,
   updateProductAndStockService,
   deleteProductService,

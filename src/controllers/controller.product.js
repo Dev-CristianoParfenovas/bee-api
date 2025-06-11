@@ -109,6 +109,33 @@ const createOrUpdateProduct = async (req, res) => {
   }
 };
 
+//ATUALIZA O ESTOQUE URILIZANDO O CÓDIGO DE BARRAS DO PRODUTO
+const updateStockByBarcode = async (req, res) => {
+  const { barcode, quantity, company_id } = req.body;
+
+  console.log("Dados recebidos no controlador:", req.body);
+
+  if (!barcode || !quantity || !company_id) {
+    return res
+      .status(400)
+      .json({ error: "Dados incompletos para atualizar produto e estoque." });
+  }
+
+  try {
+    const result = await serviceProducts.updateStockByBarcode(
+      barcode,
+      quantity,
+      company_id
+    );
+    return res
+      .status(200)
+      .json({ message: "Estoque atualizado com sucesso", data: result });
+  } catch (error) {
+    console.error("Erro no controller ao atualizar estoque:", error.message);
+    return res.status(400).json({ error: error.message });
+  }
+};
+
 export const updateProductAndStockController = async (req, res) => {
   const { product_id } = req.params;
   const {
@@ -217,5 +244,6 @@ export default {
   createOrUpdateProduct,
   getStockQuantity,
   updateProductAndStockController,
+  updateStockByBarcode,
   deleteProductController,
 };
