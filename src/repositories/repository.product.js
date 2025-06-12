@@ -237,7 +237,7 @@ const updateProductAndStock = async (
 };
 
 //FUNÇÃO PARA ATUALIZAR O ESTOQUE ATRAVES DO CODIGO DE BARRAS DO PRODUTO
-const updateStockByBarcode = async (barcode, quantityToAdd, company_id) => {
+/*120625const updateStockByBarcode = async (barcode, quantityToAdd, company_id) => {
   const client = await pool.connect();
 
   try {
@@ -284,6 +284,76 @@ const updateStockByBarcode = async (barcode, quantityToAdd, company_id) => {
     await client.query("COMMIT");
 
     return updateResult.rows[0];
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error(
+      "Erro ao atualizar estoque por código de barras:",
+      error.message
+    );
+    throw error;
+  } finally {
+    client.release();
+  }
+};*/
+
+const updateStockByBarcode = async (barcode, quantityToAdd, company_id) => {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const companyIdNum = Number(company_id);
+
+    // Busca estoque atual + product_id
+    const selectQuery = `
+      SELECT s.quantity, p.id AS product_id
+      FROM stock s
+      JOIN products p ON s.product_id = p.id
+      WHERE p.barcode = $1 AND p.company_id = $2 AND s.company_id = $2
+      FOR UPDATE
+    `;
+
+    const selectResult = await client.query(selectQuery, [
+      barcode,
+      companyIdNum,
+    ]);
+
+    if (selectResult.rows.length === 0) {
+      throw new Error(
+        "Produto não encontrado para o código de barras informado."
+      );
+    }
+
+    const { quantity: currentQuantity, product_id } = selectResult.rows[0];
+
+    const newQuantity = Number(currentQuantity) + Number(quantityToAdd);
+
+    // Atualiza estoque
+    const updateQuery = `
+      UPDATE stock
+      SET quantity = $1
+      WHERE product_id = $2 AND company_id = $3
+    `;
+
+    await client.query(updateQuery, [newQuantity, product_id, companyIdNum]);
+
+    // Busca dados completos do produto + estoque atualizado
+    const resultQuery = `
+      SELECT p.id, p.name, p.barcode, s.quantity
+      FROM stock s
+      JOIN products p ON s.product_id = p.id
+      WHERE p.id = $1 AND s.company_id = $2
+    `;
+
+    const result = await client.query(resultQuery, [product_id, companyIdNum]);
+
+    await client.query("COMMIT");
+
+    if (result.rows.length === 0) {
+      throw new Error("Erro ao obter dados do produto atualizado.");
+    }
+
+    return result.rows[0];
   } catch (error) {
     await client.query("ROLLBACK");
     console.error(
