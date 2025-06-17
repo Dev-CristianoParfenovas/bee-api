@@ -20,6 +20,8 @@ import salesRepository from "../repositories/repository.sales.js";
 };*/
 
 const createSaleService = async (saleData) => {
+  console.log("Dado recebido no service:", saleData);
+
   // Validação de quantity
   if (Array.isArray(saleData)) {
     for (let sale of saleData) {

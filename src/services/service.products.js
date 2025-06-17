@@ -57,6 +57,8 @@ const upsertProduct = async (productData) => {
     ncm,
     aliquota,
     cfop,
+    cst,
+    csosn,
   } = productData;
 
   // Insere o log aqui
@@ -69,6 +71,8 @@ const upsertProduct = async (productData) => {
     ncm,
     aliquota,
     cfop,
+    cst,
+    csosn,
     stock,
     company_id,
   });
@@ -88,7 +92,9 @@ const upsertProduct = async (productData) => {
       barcode,
       ncm,
       aliquota,
-      cfop
+      cfop,
+      cst,
+      csosn
     );
 
     return result;
@@ -110,6 +116,8 @@ export const updateProductAndStockService = async (
   ncm,
   aliquota,
   cfop,
+  cst,
+  csosn,
   quantity,
   company_id
 ) => {
@@ -123,6 +131,8 @@ export const updateProductAndStockService = async (
       ncm,
       aliquota,
       cfop,
+      cst,
+      csosn,
       quantity,
       company_id
     );

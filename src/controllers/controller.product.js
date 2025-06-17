@@ -80,6 +80,8 @@ const createOrUpdateProduct = async (req, res) => {
     ncm,
     aliquota,
     cfop,
+    cst,
+    csosn,
   } = req.body;
 
   try {
@@ -94,6 +96,8 @@ const createOrUpdateProduct = async (req, res) => {
       ncm,
       aliquota,
       cfop,
+      cst,
+      csosn,
     });
 
     return res.status(200).json({
@@ -146,6 +150,8 @@ export const updateProductAndStockController = async (req, res) => {
     ncm,
     aliquota,
     cfop,
+    cst,
+    csosn,
     quantity,
     company_id,
   } = req.body;
@@ -160,6 +166,8 @@ export const updateProductAndStockController = async (req, res) => {
       ncm,
       aliquota,
       cfop,
+      cst,
+      csosn,
       quantity,
       company_id,
     });
@@ -174,6 +182,8 @@ export const updateProductAndStockController = async (req, res) => {
       !ncm ||
       !aliquota ||
       !cfop ||
+      !cst ||
+      !csosn ||
       !quantity ||
       !company_id
     ) {
@@ -193,6 +203,8 @@ export const updateProductAndStockController = async (req, res) => {
       ncm,
       aliquota,
       cfop,
+      cst,
+      csosn,
       quantity,
       company_id
     );

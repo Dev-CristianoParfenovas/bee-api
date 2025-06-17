@@ -44,7 +44,9 @@ const upsertProductAndStock = async (
   barcode,
   ncm,
   aliquota,
-  cfop
+  cfop,
+  cst,
+  csosn
 ) => {
   const client = await pool.connect();
 
@@ -59,6 +61,8 @@ const upsertProductAndStock = async (
     ncm,
     aliquota,
     cfop,
+    cst,
+    csosn,
   });
 
   try {
@@ -81,8 +85,8 @@ const upsertProductAndStock = async (
         // Atualiza o produto existente
         const updateProductQuery = `
           UPDATE products
-          SET name = $1, category_id = $2, price = $3, barcode = $4, ncm = $5, aliquota = $6, cfop = $7
-          WHERE id = $8 AND company_id = $9
+          SET name = $1, category_id = $2, price = $3, barcode = $4, ncm = $5, aliquota = $6, cfop = $7, cst = $8, csosn = $9
+          WHERE id = $10 AND company_id = $11
           RETURNING *
         `;
         productResponse = await client.query(updateProductQuery, [
@@ -93,20 +97,23 @@ const upsertProductAndStock = async (
           ncm,
           aliquota,
           cfop,
+          cst,
+          csosn,
           id,
           company_id,
         ]);
 
         // Atualiza o estoque correspondente
-        const updateStockQuery = `
-          UPDATE stock
-          SET quantity = $1
-          WHERE product_id = $2 AND company_id = $3
-          RETURNING *
-        `;
-        stockResponse = await client.query(updateStockQuery, [
-          stockQuantity,
+        const upsertStockQuery = `
+        INSERT INTO stock (product_id, quantity, company_id)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (product_id, company_id)
+        DO UPDATE SET quantity = EXCLUDED.quantity
+        RETURNING *
+      `;
+        stockResponse = await client.query(upsertStockQuery, [
           id,
+          stockQuantity,
           company_id,
         ]);
       } else {
@@ -115,8 +122,8 @@ const upsertProductAndStock = async (
     } else {
       // Cria novo produto se o ID não for fornecido
       const insertProductQuery = `
-        INSERT INTO products (name, category_id, price, company_id, barcode, ncm, aliquota, cfop)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        INSERT INTO products (name, category_id, price, company_id, barcode, ncm, aliquota, cfop, cst, csosn)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         RETURNING *
       `;
       productResponse = await client.query(insertProductQuery, [
@@ -128,6 +135,8 @@ const upsertProductAndStock = async (
         ncm,
         aliquota,
         cfop,
+        cst,
+        csosn,
       ]);
 
       // Verifica se o produto foi inserido corretamente
@@ -186,6 +195,8 @@ const updateProductAndStock = async (
   ncm,
   aliquota,
   cfop,
+  cst,
+  csosn,
   quantity,
   company_id
 ) => {
@@ -209,6 +220,8 @@ const updateProductAndStock = async (
       ncm,
       aliquota,
       cfop,
+      cst,
+      csosn,
       product_id,
       company_id,
     ];

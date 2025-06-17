@@ -52,6 +52,7 @@ const createCompanyAndEmployee = async (name, email, password, is_admin) => {
     return {
       message: "Empresa e funcionário criados com sucesso!",
       token,
+      company_id: companyId,
       employee, // Incluindo os dados do funcionário na resposta
     };
   } catch (error) {

@@ -4,6 +4,8 @@ const createSaleController = async (req, res) => {
   // Garantindo que o corpo da requisição seja tratado como array
   const body = Array.isArray(req.body) ? req.body : [req.body];
 
+  console.log("Dado recebido no controller:", req.body);
+
   try {
     // Validação das quantidades de todos os itens, caso seja um array
     body.forEach((sale) => {

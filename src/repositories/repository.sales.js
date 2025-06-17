@@ -229,7 +229,7 @@ import pool from "../db/connection.js";
   }
 };020625*/
 
-const createSale = async (saleData) => {
+/*170625const createSale = async (saleData) => {
   const client = await pool.connect();
 
   try {
@@ -329,6 +329,129 @@ const createSale = async (saleData) => {
     return insertedSales;
   } catch (error) {
     await client.query("ROLLBACK"); // Desfaz tudo se erro
+    throw error;
+  } finally {
+    client.release();
+  }
+};*/
+
+const createSale = async (saleData) => {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const handleStockUpdate = async (productId, companyId, quantity) => {
+      const productCheck = await client.query(
+        `SELECT id FROM products WHERE id = $1 AND company_id = $2`,
+        [productId, companyId]
+      );
+
+      if (productCheck.rows.length === 0) {
+        throw new Error(`Produto com ID ${productId} não encontrado.`);
+      }
+
+      const stockResult = await client.query(
+        `SELECT quantity FROM stock WHERE product_id = $1 AND company_id = $2 FOR UPDATE`,
+        [productId, companyId]
+      );
+
+      if (stockResult.rows.length === 0) {
+        console.warn(
+          `Produto com ID ${productId} não tem estoque registrado. Criando estoque com quantidade 0.`
+        );
+
+        // Cria o estoque com quantidade zero para evitar erro de chave estrangeira
+        await client.query(
+          `INSERT INTO stock (product_id, company_id, quantity) VALUES ($1, $2, 0)`,
+          [productId, companyId]
+        );
+
+        // Depois, não precisa atualizar o estoque, pois quantidade está em 0
+        return;
+      }
+
+      const currentStock = stockResult.rows[0].quantity;
+
+      if (currentStock < quantity) {
+        throw new Error(
+          `Estoque insuficiente para o produto com ID ${productId}.`
+        );
+      }
+
+      await client.query(
+        `UPDATE stock SET quantity = quantity - $1 WHERE product_id = $2 AND company_id = $3`,
+        [quantity, productId, companyId]
+      );
+    };
+
+    const processSale = async (sale) => {
+      if (sale.product_id <= 0 || isNaN(sale.product_id)) {
+        throw new Error(`ID do produto inválido: ${sale.product_id}`);
+      }
+
+      await handleStockUpdate(sale.product_id, sale.company_id, sale.quantity);
+
+      console.log("Processando venda:", sale);
+
+      let saleDate = sale.sale_date;
+      if (!saleDate) {
+        saleDate = new Date().toISOString();
+      } else if (isNaN(new Date(saleDate).getTime())) {
+        throw new Error("Formato de data inválido para sale_date.");
+      }
+
+      const productQuery = `
+        SELECT price FROM products WHERE id = $1 AND company_id = $2
+      `;
+      const productResult = await client.query(productQuery, [
+        sale.product_id,
+        sale.company_id,
+      ]);
+
+      if (productResult.rows.length === 0) {
+        throw new Error(`Produto não encontrado ou não pertence à empresa.`);
+      }
+
+      const productPrice = parseFloat(productResult.rows[0].price);
+      if (isNaN(productPrice)) {
+        throw new Error("Preço do produto inválido.");
+      }
+
+      const totalPrice = productPrice * sale.quantity;
+
+      const query = `
+        INSERT INTO sales (company_id, product_id, id_client, employee_id, quantity, total_price, sale_date, tipovenda)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING *;
+      `;
+      const values = [
+        sale.company_id,
+        sale.product_id,
+        sale.id_client,
+        sale.employee_id,
+        parseFloat(sale.quantity),
+        parseFloat(totalPrice.toFixed(2)),
+        saleDate,
+        sale.tipovenda || 0,
+      ];
+
+      const result = await client.query(query, values);
+      return result.rows[0];
+    };
+
+    let insertedSales;
+    if (Array.isArray(saleData)) {
+      const salePromises = saleData.map(processSale);
+      insertedSales = await Promise.all(salePromises);
+    } else {
+      insertedSales = [await processSale(saleData)];
+    }
+
+    await client.query("COMMIT");
+    return insertedSales;
+  } catch (error) {
+    await client.query("ROLLBACK");
     throw error;
   } finally {
     client.release();

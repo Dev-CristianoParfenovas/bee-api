@@ -20,10 +20,12 @@ const createCompanyAndEmployee = async (req, res) => {
       is_admin
     );
 
-    // Retorna a mensagem e o token
+    // Retorna message, token, company_id e employee na resposta
     return res.status(201).json({
       message: result.message,
       token: result.token,
+      company_id: result.company_id, // <-- incluir aqui
+      employee: result.employee, // <-- incluir aqui
     });
   } catch (error) {
     // Verifica mensagens de erro conhecidas
