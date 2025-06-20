@@ -77,7 +77,7 @@ const upsertProduct = async (productData) => {
     company_id,
   });
 
-  if (!name || !category_id || !price || !company_id || stock == null) {
+  if (!name || !price || !company_id || stock == null) {
     throw new Error("Todos os campos são obrigatórios.");
   }
 
@@ -125,9 +125,9 @@ export const updateProductAndStockService = async (
     const result = await productRepository.updateProductAndStock(
       product_id,
       name,
-      category_id,
+      category_id || null,
       price,
-      barcode,
+      barcode || null,
       ncm,
       aliquota,
       cfop,

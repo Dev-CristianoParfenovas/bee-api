@@ -11,6 +11,11 @@ routersales.post(
 );
 
 routersales.get(
+  "/sales/most-sold/:company_id",
+  salesController.getMostSoldProductsByDateRangeController
+);
+
+routersales.get(
   "/sales/:company_id/date-range",
   jwt.validateJWT,
   salesController.getSalesByDateRangeController

@@ -88,11 +88,11 @@ const createOrUpdateProduct = async (req, res) => {
     const result = await serviceProducts.upsertProduct({
       id, // Passa o id para o serviço
       name,
-      category_id,
+      category_id: category_id || null,
       price,
       company_id,
       stock,
-      barcode,
+      barcode: barcode || null,
       ncm,
       aliquota,
       cfop,

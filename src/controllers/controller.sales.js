@@ -259,6 +259,31 @@ const getSalesByVehicleIdController = async (req, res) => {
   }
 };
 
+//BUSCAPRODUTOS
+const getMostSoldProductsByDateRangeController = async (req, res) => {
+  try {
+    const { company_id } = req.params;
+    const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        message: "Datas de início e fim são obrigatórias.",
+      });
+    }
+
+    const result = await salesService.getMostSoldProductsByDateRangeService(
+      company_id,
+      startDate,
+      endDate
+    );
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Erro ao buscar produtos mais vendidos por período:", error);
+    return res.status(500).json({ error: error.message });
+  }
+};
+
 const updateSaleController = async (req, res) => {
   try {
     const { id, company_id } = req.params;
@@ -294,6 +319,7 @@ export default {
   createSaleController,
   getSalesByCompanyIdController,
   getSaleByIdAndCompanyIdController,
+  getMostSoldProductsByDateRangeController,
   getSalesByDateRangeController,
   getSalesByVehicleIdController,
   updateSaleController,

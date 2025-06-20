@@ -604,6 +604,29 @@ const getSalesByVehicleId = async (company_id, vehicle_id) => {
   return result.rows;
 };
 
+//BUSCAPRODUTOS
+const getMostSoldProductsByDateRange = async (
+  company_id,
+  startDate,
+  endDate
+) => {
+  const query = `
+    SELECT 
+      p.id AS product_id,
+      p.name AS product_name,
+      SUM(s.quantity) AS total_quantity,
+      SUM(s.total_price) AS total_revenue
+    FROM sales s
+    JOIN products p ON s.product_id = p.id
+    WHERE s.company_id = $1
+      AND s.sale_date BETWEEN $2 AND $3
+    GROUP BY p.id, p.name
+    ORDER BY total_quantity DESC
+  `;
+  const result = await pool.query(query, [company_id, startDate, endDate]);
+  return result.rows;
+};
+
 const updateSaleById = async (id, company_id, saleData) => {
   const query = `
     UPDATE sales
@@ -635,6 +658,7 @@ export default {
   getSalesByDateRange,
   getSalesByVehicleId,
   getSaleByIdAndCompanyId,
+  getMostSoldProductsByDateRange,
   updateSaleById,
   deleteSaleById,
 };

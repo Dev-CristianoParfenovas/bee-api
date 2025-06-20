@@ -91,9 +91,9 @@ const upsertProductAndStock = async (
         `;
         productResponse = await client.query(updateProductQuery, [
           name,
-          category_id,
+          category_id || null,
           price,
-          barcode,
+          barcode || null,
           ncm,
           aliquota,
           cfop,
@@ -128,10 +128,10 @@ const upsertProductAndStock = async (
       `;
       productResponse = await client.query(insertProductQuery, [
         name,
-        category_id,
+        category_id || null,
         price,
         company_id,
-        barcode,
+        barcode || null,
         ncm,
         aliquota,
         cfop,
@@ -214,9 +214,9 @@ const updateProductAndStock = async (
     `;
     const valuesProduct = [
       name,
-      category_id,
+      category_id || null,
       price,
-      barcode,
+      barcode || null,
       ncm,
       aliquota,
       cfop,

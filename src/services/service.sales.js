@@ -159,6 +159,47 @@ const getSalesByVehicleIdService = async (company_id, vehicle_id) => {
   return sales;
 };
 
+//Busca produtos por período / qtde vendida
+
+const getMostSoldProductsByDateRange = async (
+  company_id,
+  startDate,
+  endDate
+) => {
+  const query = `
+    SELECT 
+      p.id AS product_id,
+      p.name AS product_name,
+      SUM(s.quantity) AS total_quantity,
+      SUM(s.total_price) AS total_revenue
+    FROM sales s
+    JOIN products p ON s.product_id = p.id
+    WHERE s.company_id = $1
+      AND s.sale_date BETWEEN $2 AND $3
+    GROUP BY p.id, p.name
+    ORDER BY total_quantity DESC
+  `;
+  const result = await pool.query(query, [company_id, startDate, endDate]);
+  return result.rows;
+};
+
+//BUSCAPRODUTOS
+const getMostSoldProductsByDateRangeService = async (
+  company_id,
+  startDate,
+  endDate
+) => {
+  if (!startDate || !endDate) {
+    throw new Error("Datas de início e fim são obrigatórias.");
+  }
+
+  return await salesRepository.getMostSoldProductsByDateRange(
+    company_id,
+    startDate,
+    endDate
+  );
+};
+
 const updateSaleService = async (id, company_id, saleData) => {
   return await salesRepository.updateSaleById(id, company_id, saleData);
 };
@@ -171,6 +212,7 @@ export default {
   createSaleService,
   getSalesByCompanyIdService,
   getSaleByIdAndCompanyIdService,
+  getMostSoldProductsByDateRangeService,
   getSalesByDateRangeService,
   getSalesByVehicleIdService,
   updateSaleService,
