@@ -3,12 +3,9 @@ import imageController from "../controllers/controller.images.js";
 
 const roterImage = Router();
 
-roterImage.post("/images", (req, res) => imageController.createImage);
-roterImage.get(
-  "/images/:productId",
-  (req, res) => imageController.getImagesByProduct
-);
-roterImage.put("/images/:id", (req, res) => imageController.updateImage);
-roterImage.delete("/images/:id", (req, res) => imageController.deleteImage);
+roterImage.post("/", (req, res) => imageController.createImage);
+roterImage.get("/:productId", (req, res) => imageController.getImagesByProduct);
+roterImage.put("/:id", (req, res) => imageController.updateImage);
+roterImage.delete("/:id", (req, res) => imageController.deleteImage);
 
 export default roterImage;

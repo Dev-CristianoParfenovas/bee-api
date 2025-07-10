@@ -6,7 +6,7 @@ const routerproduct = Router();
 
 // Rota para obter todos os produtos de um cliente
 routerproduct.get(
-  "/products/:company_id",
+  "/:company_id",
   jwt.validateJWT,
   productController.getProducts
 );
@@ -19,14 +19,14 @@ routerproduct.get(
 
 // Rota para criar um novo produto
 routerproduct.post(
-  "/products",
+  "/",
   jwt.validateJWT,
   productController.createOrUpdateProduct
 );
 
 // Rota para atualizar um produto e seu estoque
 routerproduct.put(
-  "/products/:product_id",
+  "/:product_id",
   jwt.validateJWT,
   productController.updateProductAndStockController
 );
@@ -38,7 +38,7 @@ routerproduct.put(
 
 // Rota para excluir um produto e seu estoque
 routerproduct.delete(
-  "/products/:productId",
+  "/:productId",
   jwt.validateJWT,
   productController.deleteProductController
 );

@@ -15,16 +15,21 @@ dotenv.config(); // Carregar variáveis de ambiente
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(
-  routerproduct,
-  routercompany,
-  routerclient,
-  routeremployee,
-  routercategory,
-  routersales,
-  routerVehicles,
-  routerVehicleservices
-);
+
+// Rota raiz simples para teste
+app.get("/", (req, res) => {
+  res.send("API está no ar!");
+});
+
+// Rotas com prefixos
+app.use("/products", routerproduct);
+app.use("/company", routercompany);
+app.use("/clients", routerclient);
+app.use("/employees", routeremployee);
+app.use("/categories", routercategory);
+app.use("/sales", routersales);
+app.use("/vehicles", routerVehicles);
+app.use("/vehicle_services", routerVehicleservices);
 
 const PORT = process.env.PORT || 3000;
 
