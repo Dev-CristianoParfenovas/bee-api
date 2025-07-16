@@ -24,16 +24,17 @@ routerproduct.post(
   productController.createOrUpdateProduct
 );
 
+routerproduct.put(
+  "/stock/updatestockbarcode",
+  jwt.validateJWT,
+  productController.updateStockByBarcode
+);
+
 // Rota para atualizar um produto e seu estoque
 routerproduct.put(
   "/:product_id",
   jwt.validateJWT,
   productController.updateProductAndStockController
-);
-
-routerproduct.put(
-  "/update-stock-by-barcode",
-  productController.updateStockByBarcode
 );
 
 // Rota para excluir um produto e seu estoque

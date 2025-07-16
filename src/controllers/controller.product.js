@@ -115,14 +115,27 @@ const createOrUpdateProduct = async (req, res) => {
 
 //ATUALIZA O ESTOQUE URILIZANDO O CÓDIGO DE BARRAS DO PRODUTO
 const updateStockByBarcode = async (req, res) => {
+  console.log(
+    "Requisição recebida em updateStockByBarcode",
+    req.method,
+    req.path,
+    req.body
+  );
   const { barcode, quantity, company_id } = req.body;
 
   console.log("Dados recebidos no controlador:", req.body);
 
-  if (!barcode || !quantity || !company_id) {
+  if (
+    typeof barcode !== "string" ||
+    barcode.trim() === "" ||
+    isNaN(Number(quantity)) ||
+    Number(quantity) <= 0 ||
+    isNaN(Number(company_id)) ||
+    Number(company_id) <= 0
+  ) {
     return res
       .status(400)
-      .json({ error: "Dados incompletos para atualizar produto e estoque." });
+      .json({ error: "Dados inválidos para atualizar estoque." });
   }
 
   try {

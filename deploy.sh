@@ -1,6 +1,6 @@
 KEY_PATH="/c/Bee Aplicativos/aws/bee-api-key.pem"
 REMOTE_USER="ubuntu"
-REMOTE_HOST="3.84.211.229"
+REMOTE_HOST="44.216.228.58"
 REMOTE_DIR="/home/ubuntu/bee-api"
 
 echo "🔐 Enviando .env para o EC2..."

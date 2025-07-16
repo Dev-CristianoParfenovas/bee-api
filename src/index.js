@@ -31,6 +31,13 @@ app.use("/sales", routersales);
 app.use("/vehicles", routerVehicles);
 app.use("/vehicle_services", routerVehicleservices);
 
+// Listar rotas carregadas para debug
+app._router.stack.forEach((r) => {
+  if (r.route && r.route.path) {
+    console.log(`${Object.keys(r.route.methods)} ${r.route.path}`);
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, "0.0.0.0", () => {
