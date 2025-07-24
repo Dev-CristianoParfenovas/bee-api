@@ -1,12 +1,12 @@
 import pool from "../db/connection.js";
 
-const createCategory = async (name, company_id) => {
+const createCategory = async (name, company_id, notification = false) => {
   const query = `
-    INSERT INTO categories (name, company_id)
-    VALUES ($1, $2)
+    INSERT INTO categories (name, company_id, notification)
+    VALUES ($1, $2, $3)
     RETURNING *
   `;
-  const values = [name, company_id];
+  const values = [name, company_id, notification];
   const result = await pool.query(query, values);
   return result.rows[0];
 };
@@ -53,14 +53,20 @@ const getCategoriesByCompanyId = async (company_id) => {
   }*/
 };
 
-const updateCategory = async (category_id, name, company_id) => {
+const updateCategory = async (
+  category_id,
+  name,
+  company_id,
+  notification = false
+) => {
   const query = `
     UPDATE categories
-    SET name = $1
-    WHERE id = $2 AND company_id = $3
+    SET name = $1,
+    notification = $2
+    WHERE id = $3 AND company_id = $4
     RETURNING *
   `;
-  const values = [name, category_id, company_id];
+  const values = [name, notification, category_id, company_id];
   const result = await pool.query(query, values);
   return result.rows[0];
 };
@@ -76,8 +82,16 @@ const deleteCategory = async (category_id, company_id) => {
   return result.rows[0];
 };
 
+const hasProductsInCategory = async (category_id, company_id) => {
+  const query = `SELECT 1 FROM products WHERE category_id = $1 AND company_id = $2 LIMIT 1`;
+  const values = [category_id, company_id];
+  const result = await pool.query(query, values);
+  return result.rowCount > 0;
+};
+
 export default {
   createCategory,
+  hasProductsInCategory,
   getCategoriesByCompanyId,
   getCategoryByIdAndCompanyId,
   updateCategory,

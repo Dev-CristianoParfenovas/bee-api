@@ -1,7 +1,15 @@
 import categoryRepository from "../repositories/repository.category.js";
 
-const createCategoryService = async (name, company_id) => {
-  return await categoryRepository.createCategory(name, company_id);
+const createCategoryService = async (
+  name,
+  company_id,
+  notification = false
+) => {
+  return await categoryRepository.createCategory(
+    name,
+    company_id,
+    notification
+  );
 };
 
 const getCategoryByIdAndCompanyIdService = async (id, company_id) => {
@@ -41,13 +49,43 @@ const getCategoriesByCompanyIdService = async (company_id) => {
   }*/
 };
 
-export const updateCategoryService = async (category_id, name, company_id) => {
-  return await categoryRepository.updateCategory(category_id, name, company_id);
+export const updateCategoryService = async (
+  category_id,
+  name,
+  company_id,
+  notification = false
+) => {
+  return await categoryRepository.updateCategory(
+    category_id,
+    name,
+    company_id,
+    notification
+  );
 };
 
 export const deleteCategoryService = async (category_id, company_id) => {
-  return await categoryRepository.deleteCategory(category_id, company_id);
+  // Verifica se há produtos vinculados
+  const hasProducts = await categoryRepository.hasProductsInCategory(
+    category_id,
+    company_id
+  );
+
+  if (hasProducts) {
+    return "has_products"; // sinaliza para o controller que tem produtos vinculados
+  }
+
+  // Se não houver produtos vinculados, exclui a categoria
+  const deletedCategory = await categoryRepository.deleteCategory(
+    category_id,
+    company_id
+  );
+
+  return deletedCategory;
 };
+
+/*export const deleteCategoryService = async (category_id, company_id) => {
+  return await categoryRepository.deleteCategory(category_id, company_id);
+};*/
 
 export default {
   createCategoryService,
