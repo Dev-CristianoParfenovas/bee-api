@@ -79,7 +79,7 @@ const createVehicleService = async (
     parseInt(sale_id),
     license_plate,
     model,
-    parseFloat(km), // como `km` é numeric
+    km,
     parseInt(company_id),
     parseInt(employee_id),
     parseInt(client_id),

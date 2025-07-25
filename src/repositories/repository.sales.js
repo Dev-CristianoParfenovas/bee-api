@@ -52,6 +52,12 @@ const createSale = async (saleData) => {
     };
 
     const processSale = async (sale) => {
+      const vehicleInfo = {
+        vehicle_id: sale.vehicleInfo?.vehicle_id || null,
+        km: sale.vehicleInfo?.km || null,
+        license_plate: sale.vehicleInfo?.license_plate || null,
+      };
+
       if (sale.product_id <= 0 || isNaN(sale.product_id)) {
         throw new Error(`ID do produto inválido: ${sale.product_id}`);
       }
@@ -87,8 +93,8 @@ const createSale = async (saleData) => {
       const totalPrice = productPrice * sale.quantity;
 
       const query = `
-        INSERT INTO sales (company_id, product_id, id_client, employee_id, quantity, total_price, sale_date, tipovenda)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        INSERT INTO sales (company_id, product_id, id_client, employee_id, quantity, total_price, sale_date, tipovenda, id_vehicle, km, license_plate)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         RETURNING *;
       `;
       const values = [
@@ -100,6 +106,9 @@ const createSale = async (saleData) => {
         parseFloat(totalPrice.toFixed(2)),
         saleDate,
         sale.tipovenda || 0,
+        vehicleInfo.vehicle_id,
+        vehicleInfo.km != null ? String(vehicleInfo.km).trim() : null,
+        vehicleInfo.license_plate,
       ];
 
       const result = await client.query(query, values);
@@ -257,7 +266,7 @@ const getSaleByIdAndCompanyId = async (id, company_id) => {
   return rows;
 };050625*/
 
-const getSalesByDateRange = async ({
+/*250725 const getSalesByDateRange = async ({
   company_id,
   startDate,
   endDate,
@@ -298,6 +307,101 @@ const getSalesByDateRange = async ({
   }
 
   console.log("Query gerada no repositório:", query, values);
+
+  const { rows } = await pool.query(query, values);
+  return rows;
+};*/
+
+/* 25 07 2025 const getSalesByDateRange = async ({
+  company_id,
+  startDate,
+  endDate,
+  employee_id,
+  client_id,
+  vehicle_id,
+}) => {
+  let query = `
+    SELECT DISTINCT ON (sales.id)
+      sales.id,
+      sales.total_price,
+      sales.sale_date,
+      clients.name AS client_name,
+      employees.name AS employee_name
+    FROM sales
+    LEFT JOIN clients ON sales.id_client = clients.id_client
+    LEFT JOIN employees ON sales.employee_id = employees.id_employee
+    LEFT JOIN service_vehicles ON sales.id = service_vehicles.sale_id
+    WHERE sales.company_id = $1
+      AND sales.sale_date BETWEEN $2 AND $3
+  `;
+
+  const values = [company_id, startDate, endDate];
+
+  if (employee_id) {
+    query += ` AND sales.employee_id = $${values.length + 1}`;
+    values.push(employee_id);
+  }
+
+  if (client_id) {
+    query += ` AND sales.id_client = $${values.length + 1}`;
+    values.push(client_id);
+  }
+
+  if (vehicle_id) {
+    query += ` AND service_vehicles.vehicle_id = $${values.length + 1}`;
+    values.push(vehicle_id);
+  }
+
+  query += ` ORDER BY sales.id, sales.sale_date DESC`;
+
+  const { rows } = await pool.query(query, values);
+  return rows;
+};*/
+
+const getSalesByDateRange = async ({
+  company_id,
+  startDate,
+  endDate,
+  employee_id,
+  client_id,
+  vehicle_id,
+}) => {
+  let query = `
+    SELECT
+      sales.id,
+      sales.total_price,
+      sales.sale_date,
+      clients.name AS client_name,
+      employees.name AS employee_name,
+      sales.employee_id
+    FROM sales
+    LEFT JOIN clients ON sales.id_client = clients.id_client
+    LEFT JOIN employees ON sales.employee_id = employees.id_employee
+  `;
+
+  const values = [company_id, startDate, endDate];
+  let conditions = [
+    `sales.company_id = $1`,
+    `sales.sale_date BETWEEN $2 AND $3`,
+  ];
+
+  if (employee_id) {
+    values.push(employee_id);
+    conditions.push(`sales.employee_id = $${values.length}`);
+  }
+
+  if (client_id) {
+    values.push(client_id);
+    conditions.push(`sales.id_client = $${values.length}`);
+  }
+
+  if (vehicle_id) {
+    values.push(vehicle_id);
+    conditions.push(`sales.id_vehicle = $${values.length}`);
+  }
+
+  query += ` WHERE ${conditions.join(" AND ")}`;
+  query += ` ORDER BY sales.sale_date DESC`;
 
   const { rows } = await pool.query(query, values);
   return rows;
