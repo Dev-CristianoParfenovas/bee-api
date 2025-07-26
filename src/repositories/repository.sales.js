@@ -441,6 +441,29 @@ const getMostSoldProductsByDateRange = async (
   return result.rows;
 };
 
+const getProductsBySaleId = async (company_id, saleId) => {
+  const query = `
+    SELECT 
+      si.product_id,
+      p.name AS product_name,
+      si.quantity,
+      si.unit_price,
+      si.total_price
+    FROM sale_items si
+    JOIN products p ON si.product_id = p.id
+    JOIN sales s ON si.sale_id = s.id
+    WHERE si.sale_id = $1 AND s.company_id = $2
+  `;
+
+  try {
+    const result = await pool.query(query, [saleId, company_id]);
+    return result.rows;
+  } catch (error) {
+    console.error("Erro no repository:", error);
+    throw error; // reenvia para ser tratado no controller
+  }
+};
+
 const updateSaleById = async (id, company_id, saleData) => {
   const query = `
     UPDATE sales
@@ -471,6 +494,7 @@ export default {
   getSalesByCompanyId,
   getSalesByDateRange,
   getSalesByVehicleId,
+  getProductsBySaleId,
   getSaleByIdAndCompanyId,
   getMostSoldProductsByDateRange,
   updateSaleById,

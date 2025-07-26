@@ -284,6 +284,29 @@ const getMostSoldProductsByDateRangeController = async (req, res) => {
   }
 };
 
+const getProductsBySaleIdController = async (req, res) => {
+  try {
+    const companyId = parseInt(req.params.company_id);
+    const saleId = parseInt(req.params.saleId);
+
+    if (isNaN(companyId) || isNaN(saleId)) {
+      return res
+        .status(400)
+        .json({ error: "company_id e saleId devem ser números válidos." });
+    }
+
+    const products = await salesService.getProductsBySaleIdService(
+      companyId,
+      saleId
+    );
+
+    return res.status(200).json(products);
+  } catch (error) {
+    console.error("Erro ao buscar produtos da venda:", error);
+    return res.status(500).json({ error: "Erro ao buscar produtos da venda" });
+  }
+};
+
 const updateSaleController = async (req, res) => {
   try {
     const { id, company_id } = req.params;
@@ -318,6 +341,7 @@ const deleteSaleController = async (req, res) => {
 export default {
   createSaleController,
   getSalesByCompanyIdController,
+  getProductsBySaleIdController,
   getSaleByIdAndCompanyIdController,
   getMostSoldProductsByDateRangeController,
   getSalesByDateRangeController,

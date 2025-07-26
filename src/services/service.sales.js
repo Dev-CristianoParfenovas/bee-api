@@ -200,6 +200,14 @@ const getMostSoldProductsByDateRangeService = async (
   );
 };
 
+const getProductsBySaleIdService = async (companyId, saleId) => {
+  if (!companyId || !saleId) {
+    throw new Error("companyId e saleId são obrigatórios.");
+  }
+
+  return await salesRepository.getProductsBySaleId(companyId, saleId);
+};
+
 const updateSaleService = async (id, company_id, saleData) => {
   return await salesRepository.updateSaleById(id, company_id, saleData);
 };
@@ -211,6 +219,7 @@ const deleteSaleService = async (id, company_id) => {
 export default {
   createSaleService,
   getSalesByCompanyIdService,
+  getProductsBySaleIdService,
   getSaleByIdAndCompanyIdService,
   getMostSoldProductsByDateRangeService,
   getSalesByDateRangeService,

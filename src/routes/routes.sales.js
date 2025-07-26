@@ -37,6 +37,12 @@ routersales.get(
   salesController.getSalesByVehicleIdController
 );
 
+routersales.get(
+  "/:company_id/products-by-sale/:saleId",
+  jwt.validateJWT,
+  salesController.getProductsBySaleIdController
+);
+
 routersales.put(
   "/:company_id/:id",
   jwt.validateJWT,
