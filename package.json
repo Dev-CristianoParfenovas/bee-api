@@ -17,6 +17,7 @@
     "express": "^4.21.1",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.13.0",
-    "quick-api": "file:"
+    "quick-api": "file:",
+    "uuid": "^11.1.0"
   }
 }

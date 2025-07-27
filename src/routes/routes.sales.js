@@ -38,7 +38,7 @@ routersales.get(
 );
 
 routersales.get(
-  "/:company_id/products-by-sale/:saleId",
+  "/:company_id/products-by-sale/:saleGroupId",
   jwt.validateJWT,
   salesController.getProductsBySaleIdController
 );

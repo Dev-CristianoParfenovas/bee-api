@@ -1,11 +1,15 @@
 import pool from "../db/connection.js";
 import serviceVehiclesRepository from "./repository.vehicle_services.js";
+import { v4 as uuidv4 } from "uuid";
 
 const createSale = async (saleData) => {
   const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
+
+    // Gera o sale_group_id para agrupar os itens da venda
+    const saleGroupId = uuidv4();
 
     const handleStockUpdate = async (productId, companyId, quantity) => {
       const productCheck = await client.query(
@@ -74,8 +78,8 @@ const createSale = async (saleData) => {
       }
 
       const productQuery = `
-        SELECT price FROM products WHERE id = $1 AND company_id = $2
-      `;
+          SELECT price FROM products WHERE id = $1 AND company_id = $2
+        `;
       const productResult = await client.query(productQuery, [
         sale.product_id,
         sale.company_id,
@@ -93,10 +97,10 @@ const createSale = async (saleData) => {
       const totalPrice = productPrice * sale.quantity;
 
       const query = `
-        INSERT INTO sales (company_id, product_id, id_client, employee_id, quantity, total_price, sale_date, tipovenda, id_vehicle, km, license_plate)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-        RETURNING *;
-      `;
+          INSERT INTO sales (company_id, product_id, id_client, employee_id, quantity, total_price, unit_price, sale_date, tipovenda, id_vehicle, km, license_plate, sale_group_id)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+          RETURNING *;
+        `;
       const values = [
         sale.company_id,
         sale.product_id,
@@ -104,11 +108,13 @@ const createSale = async (saleData) => {
         sale.employee_id,
         parseFloat(sale.quantity),
         parseFloat(totalPrice.toFixed(2)),
+        parseFloat(productPrice.toFixed(2)),
         saleDate,
         sale.tipovenda || 0,
         vehicleInfo.vehicle_id,
         vehicleInfo.km != null ? String(vehicleInfo.km).trim() : null,
         vehicleInfo.license_plate,
+        saleGroupId, // Passa o sale_group_id aqui
       ];
 
       const result = await client.query(query, values);
@@ -134,11 +140,11 @@ const createSale = async (saleData) => {
     // === AQUI ===
     for (const sale of insertedSales) {
       const categoryQuery = `
-        SELECT c.notification 
-        FROM categories c
-        JOIN products p ON p.category_id = c.id
-        WHERE p.id = $1 AND p.company_id = $2
-      `;
+          SELECT c.notification 
+          FROM categories c
+          JOIN products p ON p.category_id = c.id
+          WHERE p.id = $1 AND p.company_id = $2
+        `;
       const categoryResult = await client.query(categoryQuery, [
         sale.product_id,
         sale.company_id,
@@ -179,9 +185,9 @@ const createSale = async (saleData) => {
 
 const getSalesByCompanyId = async (company_id, tipovenda) => {
   const query = `
-    SELECT * FROM sales
-    WHERE company_id = $1 AND tipovenda = $2;
-  `;
+      SELECT * FROM sales
+      WHERE company_id = $1 AND tipovenda = $2;
+    `;
   const result = await pool.query(query, [company_id, tipovenda]);
   return result.rows;
 };
@@ -192,172 +198,6 @@ const getSaleByIdAndCompanyId = async (id, company_id) => {
   return result.rows[0];
 };
 
-/*const getSalesByDateRange = async ({
-  company_id,
-  startDate,
-  endDate,
-  employee_id,
-  client_id,
-}) => {
-  const query = `
-    SELECT
-      sales.*,
-      clients.name AS client_name,
-      employees.name AS employee_name
-    FROM sales
-    LEFT JOIN clients ON sales.id_client = clients.id_client
-    LEFT JOIN employees ON sales.employee_id = employees.id_employee
-    WHERE sales.company_id = $1
-      AND sales.sale_date BETWEEN $2 AND $3
-      ${employee_id ? `AND sales.employee_id = $4` : ""}
-      ${client_id ? `AND sales.id_client = $5` : ""}
-  `;
-
-  const values = [company_id, startDate, endDate];
-  if (employee_id) values.push(employee_id);
-  if (client_id) values.push(client_id);
-
-  console.log("Query gerada no repositório:", query, values);
-
-  const { rows } = await pool.query(query, values);
-  return rows;
-};*/
-
-/*050625const getSalesByDateRange = async ({
-  company_id,
-  startDate,
-  endDate,
-  employee_id,
-  client_id,
-  vehicle_id,
-}) => {
-  let query = `
-    SELECT
-      sales.*,
-      clients.name AS client_name,
-      employees.name AS employee_name
-    FROM sales
-    LEFT JOIN clients ON sales.id_client = clients.id_client
-    LEFT JOIN employees ON sales.employee_id = employees.id_employee
-    WHERE sales.company_id = $1
-      AND sales.sale_date BETWEEN $2 AND $3
-  `;
-
-  const values = [company_id, startDate, endDate];
-
-  if (employee_id) {
-    query += ` AND sales.employee_id = $${values.length + 1}`;
-    values.push(employee_id);
-  }
-
-  if (client_id) {
-    query += ` AND sales.id_client = $${values.length + 1}`;
-    values.push(client_id);
-  }
-
-  if (vehicle_id) {
-    query += ` AND sales.id_vehicle = $${values.length + 1}`;
-    values.push(vehicle_id);
-  }
-
-  console.log("Query gerada no repositório:", query, values);
-
-  const { rows } = await pool.query(query, values);
-  return rows;
-};050625*/
-
-/*250725 const getSalesByDateRange = async ({
-  company_id,
-  startDate,
-  endDate,
-  employee_id,
-  client_id,
-  vehicle_id,
-}) => {
-  let query = `
-    SELECT
-      sales.*,
-      clients.name AS client_name,
-      employees.name AS employee_name,
-      service_vehicles.model AS model
-    FROM sales
-    LEFT JOIN clients ON sales.id_client = clients.id_client
-    LEFT JOIN employees ON sales.employee_id = employees.id_employee   
-    LEFT JOIN service_vehicles ON sales.id = service_vehicles.sale_id    
-    WHERE sales.company_id = $1
-      AND sales.sale_date BETWEEN $2 AND $3
-  `;
-
-  const values = [company_id, startDate, endDate];
-
-  if (employee_id) {
-    query += ` AND sales.employee_id = $${values.length + 1}`;
-    values.push(employee_id);
-  }
-
-  if (client_id) {
-    query += ` AND sales.id_client = $${values.length + 1}`;
-    values.push(client_id);
-  }
-
-  // Agora, o filtro por vehicle_id usará a coluna da tabela service_vehicles
-  if (vehicle_id) {
-    query += ` AND service_vehicles.vehicle_id = $${values.length + 1}`;
-    values.push(vehicle_id);
-  }
-
-  console.log("Query gerada no repositório:", query, values);
-
-  const { rows } = await pool.query(query, values);
-  return rows;
-};*/
-
-/* 25 07 2025 const getSalesByDateRange = async ({
-  company_id,
-  startDate,
-  endDate,
-  employee_id,
-  client_id,
-  vehicle_id,
-}) => {
-  let query = `
-    SELECT DISTINCT ON (sales.id)
-      sales.id,
-      sales.total_price,
-      sales.sale_date,
-      clients.name AS client_name,
-      employees.name AS employee_name
-    FROM sales
-    LEFT JOIN clients ON sales.id_client = clients.id_client
-    LEFT JOIN employees ON sales.employee_id = employees.id_employee
-    LEFT JOIN service_vehicles ON sales.id = service_vehicles.sale_id
-    WHERE sales.company_id = $1
-      AND sales.sale_date BETWEEN $2 AND $3
-  `;
-
-  const values = [company_id, startDate, endDate];
-
-  if (employee_id) {
-    query += ` AND sales.employee_id = $${values.length + 1}`;
-    values.push(employee_id);
-  }
-
-  if (client_id) {
-    query += ` AND sales.id_client = $${values.length + 1}`;
-    values.push(client_id);
-  }
-
-  if (vehicle_id) {
-    query += ` AND service_vehicles.vehicle_id = $${values.length + 1}`;
-    values.push(vehicle_id);
-  }
-
-  query += ` ORDER BY sales.id, sales.sale_date DESC`;
-
-  const { rows } = await pool.query(query, values);
-  return rows;
-};*/
-
 const getSalesByDateRange = async ({
   company_id,
   startDate,
@@ -367,17 +207,21 @@ const getSalesByDateRange = async ({
   vehicle_id,
 }) => {
   let query = `
-    SELECT
-      sales.id,
-      sales.total_price,
-      sales.sale_date,
-      clients.name AS client_name,
-      employees.name AS employee_name,
-      sales.employee_id
-    FROM sales
-    LEFT JOIN clients ON sales.id_client = clients.id_client
-    LEFT JOIN employees ON sales.employee_id = employees.id_employee
-  `;
+      SELECT
+        sales.id,
+        sales.sale_group_id,
+        sales.unit_price,
+        sales.total_price,
+        sales.sale_date,
+        clients.name AS client_name,
+        employees.name AS employee_name,
+        vehicles.model AS vehicle_model,
+        sales.employee_id
+      FROM sales
+      LEFT JOIN clients ON sales.id_client = clients.id_client
+      LEFT JOIN employees ON sales.employee_id = employees.id_employee
+      LEFT JOIN vehicles ON sales.id_vehicle = vehicles.id_vehicle
+    `;
 
   const values = [company_id, startDate, endDate];
   let conditions = [
@@ -410,10 +254,10 @@ const getSalesByDateRange = async ({
 //POR ID DO VEÍCULO
 const getSalesByVehicleId = async (company_id, vehicle_id) => {
   const query = `
-    SELECT sales.*
-    FROM sales
-    WHERE sales.company_id = $1 AND sales.vehicle_id = $2
-  `;
+      SELECT sales.*
+      FROM sales
+      WHERE sales.company_id = $1 AND sales.vehicle_id = $2
+    `;
   const result = await pool.query(query, [company_id, vehicle_id]);
   return result.rows;
 };
@@ -425,52 +269,55 @@ const getMostSoldProductsByDateRange = async (
   endDate
 ) => {
   const query = `
-    SELECT 
-      p.id AS product_id,
-      p.name AS product_name,
-      SUM(s.quantity) AS total_quantity,
-      SUM(s.total_price) AS total_revenue
-    FROM sales s
-    JOIN products p ON s.product_id = p.id
-    WHERE s.company_id = $1
-      AND s.sale_date BETWEEN $2 AND $3
-    GROUP BY p.id, p.name
-    ORDER BY total_quantity DESC
-  `;
+      SELECT 
+        p.id AS product_id,
+        p.name AS product_name,
+        SUM(s.quantity) AS total_quantity,
+        SUM(s.total_price) AS total_revenue
+      FROM sales s
+      JOIN products p ON s.product_id = p.id
+      WHERE s.company_id = $1
+        AND s.sale_date BETWEEN $2 AND $3
+      GROUP BY p.id, p.name
+      ORDER BY total_quantity DESC
+    `;
   const result = await pool.query(query, [company_id, startDate, endDate]);
   return result.rows;
 };
 
-const getProductsBySaleId = async (company_id, saleId) => {
-  const query = `
-    SELECT 
-      si.product_id,
-      p.name AS product_name,
-      si.quantity,
-      si.unit_price,
-      si.total_price
-    FROM sale_items si
-    JOIN products p ON si.product_id = p.id
-    JOIN sales s ON si.sale_id = s.id
-    WHERE si.sale_id = $1 AND s.company_id = $2
-  `;
-
+const getProductsBySaleIdRepository = async (saleGroupId, companyId) => {
   try {
-    const result = await pool.query(query, [saleId, company_id]);
+    const query = `
+      SELECT 
+        s.id,
+        s.sale_group_id,
+        s.product_id,
+        p.name AS product_name,
+        s.quantity,
+        s.unit_price,
+        s.total_price,
+        s.sale_date
+      FROM sales s
+      INNER JOIN products p ON s.product_id = p.id
+      WHERE s.sale_group_id = $1 AND s.company_id = $2
+      ORDER BY s.sale_date, s.id
+    `;
+
+    const result = await pool.query(query, [saleGroupId, companyId]);
     return result.rows;
   } catch (error) {
     console.error("Erro no repository:", error);
-    throw error; // reenvia para ser tratado no controller
+    throw error; // relança para o controller capturar
   }
 };
 
 const updateSaleById = async (id, company_id, saleData) => {
   const query = `
-    UPDATE sales
-    SET product_id = $1, quantity = $2, total_price = $3, tipovenda = $4
-    WHERE id = $5 AND company_id = $6
-    RETURNING *;
-  `;
+      UPDATE sales
+      SET product_id = $1, quantity = $2, total_price = $3, tipovenda = $4
+      WHERE id = $5 AND company_id = $6
+      RETURNING *;
+    `;
   const values = [
     saleData.product_id,
     saleData.quantity,
@@ -494,7 +341,7 @@ export default {
   getSalesByCompanyId,
   getSalesByDateRange,
   getSalesByVehicleId,
-  getProductsBySaleId,
+  getProductsBySaleIdRepository,
   getSaleByIdAndCompanyId,
   getMostSoldProductsByDateRange,
   updateSaleById,
