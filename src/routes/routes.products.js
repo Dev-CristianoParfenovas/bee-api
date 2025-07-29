@@ -1,7 +1,7 @@
 import { Router } from "express";
 import productController from "../controllers/controller.product.js";
 import jwt from "../jwt/token.js";
-
+import handleImageUpload from "../middlewares/imageUploadHandler.js";
 const routerproduct = Router();
 
 // Rota para obter todos os produtos de um cliente
@@ -21,6 +21,11 @@ routerproduct.get(
 routerproduct.post(
   "/",
   jwt.validateJWT,
+  handleImageUpload,
+  (req, res, next) => {
+    console.log("Recebido POST /products", { body: req.body, file: req.file });
+    next();
+  },
   productController.createOrUpdateProduct
 );
 
@@ -34,6 +39,7 @@ routerproduct.put(
 routerproduct.put(
   "/:product_id",
   jwt.validateJWT,
+  handleImageUpload,
   productController.updateProductAndStockController
 );
 

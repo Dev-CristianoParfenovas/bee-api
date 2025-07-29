@@ -68,7 +68,7 @@ const getStockQuantity = async (req, res) => {
   }
 };
 
-const createOrUpdateProduct = async (req, res) => {
+/*280725const createOrUpdateProduct = async (req, res) => {
   const {
     id,
     name,
@@ -84,6 +84,8 @@ const createOrUpdateProduct = async (req, res) => {
     csosn,
   } = req.body;
 
+  const image_url = req.file ? req.file.location : null;
+
   try {
     const result = await serviceProducts.upsertProduct({
       id, // Passa o id para o serviço
@@ -98,6 +100,7 @@ const createOrUpdateProduct = async (req, res) => {
       cfop,
       cst,
       csosn,
+      image_url,
     });
 
     return res.status(200).json({
@@ -151,9 +154,77 @@ const updateStockByBarcode = async (req, res) => {
     console.error("Erro no controller ao atualizar estoque:", error.message);
     return res.status(400).json({ error: error.message });
   }
+};*/
+
+const createOrUpdateProduct = async (req, res) => {
+  console.log("Arquivo recebido:", req.file);
+
+  console.log("Entrou no controller createOrUpdateProduct");
+  console.log("Body:", req.body);
+  console.log("File:", req.file);
+
+  const {
+    id,
+    name,
+    category_id,
+    price,
+    company_id,
+    stock,
+    barcode,
+    ncm,
+    aliquota,
+    cfop,
+    cst,
+    csosn,
+  } = req.body;
+
+  try {
+    if (!name || !category_id || !price || !company_id) {
+      return res.status(400).json({
+        message:
+          "Campos obrigatórios ausentes: name, category_id, price, company_id.",
+      });
+    }
+
+    // req.file vai conter o arquivo (se enviado)
+    const file = req.file || null;
+
+    //Conversão dos tipos
+    const stockQuantity = stock ? parseInt(stock, 10) : 0;
+    const priceFloat = parseFloat(price);
+    const categoryIdInt = category_id ? parseInt(category_id, 10) : null;
+    const companyIdInt = company_id ? parseInt(company_id, 10) : null;
+
+    const result = await serviceProducts.upsertProduct({
+      id,
+      name,
+      category_id: categoryIdInt,
+      price: priceFloat,
+      company_id: companyIdInt,
+      stock: stockQuantity,
+      barcode,
+      ncm,
+      aliquota,
+      cfop,
+      cst,
+      csosn,
+      file,
+    });
+
+    return res.status(200).json({
+      message: "Produto criado ou atualizado com sucesso.",
+      data: result,
+    });
+  } catch (err) {
+    console.error("Erro ao criar ou atualizar produto: ", err);
+    return res.status(500).json({
+      message: "Erro ao criar ou atualizar produto.",
+      error: err.message,
+    });
+  }
 };
 
-export const updateProductAndStockController = async (req, res) => {
+const updateProductAndStockController = async (req, res) => {
   const { product_id } = req.params;
   const {
     name,
@@ -169,6 +240,8 @@ export const updateProductAndStockController = async (req, res) => {
     company_id,
   } = req.body;
 
+  const image_url = req.file?.location || req.body.image_url || null;
+
   try {
     console.log("Dados recebidos no controlador:", {
       product_id,
@@ -181,6 +254,7 @@ export const updateProductAndStockController = async (req, res) => {
       cfop,
       cst,
       csosn,
+      image_url,
       quantity,
       company_id,
     });
@@ -188,16 +262,19 @@ export const updateProductAndStockController = async (req, res) => {
     // Checar se os dados estão completos
     if (
       !product_id ||
-      !name ||
+      !name?.trim() ||
       !category_id ||
-      !price ||
-      !barcode ||
-      !ncm ||
-      !aliquota ||
-      !cfop ||
-      !cst ||
-      !csosn ||
-      !quantity ||
+      price == null ||
+      isNaN(price) ||
+      !barcode?.trim() ||
+      !ncm?.trim() ||
+      aliquota == null ||
+      !cfop?.trim() ||
+      !cst?.trim() ||
+      !csosn?.trim() ||
+      !image_url?.trim() ||
+      quantity == null ||
+      isNaN(quantity) ||
       !company_id
     ) {
       console.error("Dados incompletos para atualizar produto e estoque.");
@@ -241,6 +318,46 @@ export const updateProductAndStockController = async (req, res) => {
     return res
       .status(500)
       .json({ message: "Erro ao atualizar produto e estoque." });
+  }
+};
+
+//ATUALIZA O ESTOQUE URILIZANDO O CÓDIGO DE BARRAS DO PRODUTO
+const updateStockByBarcode = async (req, res) => {
+  console.log(
+    "Requisição recebida em updateStockByBarcode",
+    req.method,
+    req.path,
+    req.body
+  );
+  const { barcode, quantity, company_id } = req.body;
+
+  console.log("Dados recebidos no controlador:", req.body);
+
+  if (
+    typeof barcode !== "string" ||
+    barcode.trim() === "" ||
+    isNaN(Number(quantity)) ||
+    Number(quantity) <= 0 ||
+    isNaN(Number(company_id)) ||
+    Number(company_id) <= 0
+  ) {
+    return res
+      .status(400)
+      .json({ error: "Dados inválidos para atualizar estoque." });
+  }
+
+  try {
+    const result = await serviceProducts.updateStockByBarcode(
+      barcode,
+      quantity,
+      company_id
+    );
+    return res
+      .status(200)
+      .json({ message: "Estoque atualizado com sucesso", data: result });
+  } catch (error) {
+    console.error("Erro no controller ao atualizar estoque:", error.message);
+    return res.status(400).json({ error: error.message });
   }
 };
 

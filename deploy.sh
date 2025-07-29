@@ -24,7 +24,8 @@ echo "🚀 Instalando dependências e reiniciando aplicação com PM2..."
 ssh -i "$KEY_PATH" $REMOTE_USER@$REMOTE_HOST << EOF
   cd $REMOTE_DIR
   npm install --omit=dev
-  pm2 restart bee-api || pm2 start src/index.js --name bee-api
+  pm2 delete bee-api || true
+  pm2 start src/index.js --name bee-api
 EOF
 
 echo "✅ Deploy concluído com sucesso!"

@@ -1,5 +1,7 @@
 import express from "express";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 import routerproduct from "./routes/routes.products.js";
 import routercompany from "./routes/routes.company.js";
 import routerclient from "./routes/routes.client.js";
@@ -12,9 +14,15 @@ import dotenv from "dotenv";
 
 dotenv.config(); // Carregar variáveis de ambiente
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Servir a pasta uploads como estática para acesso público
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Rota raiz simples para teste
 app.get("/", (req, res) => {

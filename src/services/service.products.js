@@ -1,5 +1,6 @@
 import productRepository from "../repositories/repository.product.js";
-import stockRepository from "../repositories/repository.product.js";
+import { uploadFileToS3 } from "../middlewares/upload.js";
+
 const getProductsByClient = async (company_id, search) => {
   try {
     const products = await productRepository.getProductsByClient(
@@ -37,7 +38,7 @@ const getStockQuantity = async (product_id, company_id) => {
     throw new Error("Produto e empresa são obrigatórios");
   }
 
-  const quantity = await stockRepository.getStockQuantityByProduct(
+  const quantity = await productRepository.getStockQuantityByProduct(
     product_id,
     company_id
   );
@@ -45,7 +46,7 @@ const getStockQuantity = async (product_id, company_id) => {
 };
 
 // Exemplo de como o serviço upsertProduct poderia ser estruturado
-const upsertProduct = async (productData) => {
+/*280725const upsertProduct = async (productData) => {
   const {
     id,
     name,
@@ -59,6 +60,7 @@ const upsertProduct = async (productData) => {
     cfop,
     cst,
     csosn,
+    image_url,
   } = productData;
 
   // Insere o log aqui
@@ -73,6 +75,7 @@ const upsertProduct = async (productData) => {
     cfop,
     cst,
     csosn,
+    image_url,
     stock,
     company_id,
   });
@@ -94,7 +97,8 @@ const upsertProduct = async (productData) => {
       aliquota,
       cfop,
       cst,
-      csosn
+      csosn,
+      image_url
     );
 
     return result;
@@ -105,6 +109,51 @@ const upsertProduct = async (productData) => {
     );
     throw err;
   }
+};*/
+
+const upsertProduct = async (productData) => {
+  const {
+    id,
+    name,
+    category_id,
+    price,
+    company_id,
+    stock,
+    barcode,
+    ncm,
+    aliquota,
+    cfop,
+    cst,
+    csosn,
+    file,
+  } = productData;
+
+  // Obtem o caminho da imagem se o arquivo existir
+  // const image_url = file?.location || null;
+
+  // Validar e sanitizar dados, se quiser
+  const sanitizedName = name?.trim();
+  const sanitizedBarcode = barcode?.trim() || null;
+  const sanitizedNcm = ncm?.trim() || null;
+  const sanitizedCfop = cfop?.trim() || null;
+  const sanitizedCst = cst?.trim() || null;
+  const sanitizedCsosn = csosn?.trim() || null;
+
+  return await productRepository.upsertProductAndStock(
+    id,
+    sanitizedName,
+    category_id,
+    parseFloat(price),
+    company_id,
+    stock ? parseInt(stock) : 0,
+    sanitizedBarcode,
+    sanitizedNcm,
+    aliquota ? parseFloat(aliquota) : null,
+    sanitizedCfop,
+    sanitizedCst,
+    sanitizedCsosn,
+    file || null
+  );
 };
 
 export const updateProductAndStockService = async (
@@ -118,6 +167,7 @@ export const updateProductAndStockService = async (
   cfop,
   cst,
   csosn,
+  image_url,
   quantity,
   company_id
 ) => {
@@ -133,6 +183,7 @@ export const updateProductAndStockService = async (
       cfop,
       cst,
       csosn,
+      image_url,
       quantity,
       company_id
     );
