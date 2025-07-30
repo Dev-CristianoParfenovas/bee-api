@@ -1,5 +1,4 @@
 import productRepository from "../repositories/repository.product.js";
-import { uploadFileToS3 } from "../middlewares/upload.js";
 
 const getProductsByClient = async (company_id, search) => {
   try {
@@ -152,7 +151,7 @@ const upsertProduct = async (productData) => {
     sanitizedCfop,
     sanitizedCst,
     sanitizedCsosn,
-    file || null
+    file
   );
 };
 

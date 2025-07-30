@@ -2,7 +2,7 @@ import multer from "multer";
 import { Upload } from "@aws-sdk/lib-storage";
 import s3 from "../config/s3.js";
 
-const bucketName = "bee-aplicativos-img";
+const bucketName = process.env.AWS_BUCKET_NAME || "bee-aplicativos-img";
 
 // Multer vai guardar o arquivo em memória (buffer)
 const upload = multer({ storage: multer.memoryStorage() });
