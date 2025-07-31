@@ -7,6 +7,7 @@ import routercompany from "./routes/routes.company.js";
 import routerclient from "./routes/routes.client.js";
 import routeremployee from "./routes/routes.employee.js";
 import routercategory from "./routes/routes.category.js";
+import routerImage from "./routes/routes.images.js";
 import routersales from "./routes/routes.sales.js";
 import routerVehicles from "./routes/routes.vehicles.js";
 import routerVehicleservices from "./routes/routes.vehicle_services.js";
@@ -21,6 +22,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Middleware para logar todas as requisições (antes das rotas)
+app.use((req, res, next) => {
+  console.log("Headers:", req.headers);
+  console.log("Body:", req.body);
+  console.log("File:", req.file); // vai mostrar undefined na maioria das rotas sem upload
+  next();
+});
+
 // Servir a pasta uploads como estática para acesso público
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
@@ -32,6 +41,7 @@ app.get("/", (req, res) => {
 // Rotas com prefixos
 app.use("/products", routerproduct);
 app.use("/company", routercompany);
+app.use("/images", routerImage);
 app.use("/clients", routerclient);
 app.use("/employees", routeremployee);
 app.use("/categories", routercategory);

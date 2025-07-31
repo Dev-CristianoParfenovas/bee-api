@@ -1,5 +1,4 @@
 import pool from "../db/connection.js";
-import { uploadFileToS3 } from "../middlewares/upload.js";
 
 // Função para obter os produtos de uma empresa
 const getProductsByClient = async (company_id, search = "") => {
@@ -9,6 +8,7 @@ const getProductsByClient = async (company_id, search = "") => {
     LEFT JOIN stock s ON p.id = s.product_id
     WHERE p.company_id = $1
     AND p.name ILIKE $2
+    ORDER BY p.created_at DESC
   `;
   const values = [company_id, `%${search}%`];
 
@@ -349,7 +349,7 @@ const upsertProductAndStock = async (
     let imageUrl = null;
 
     if (id) {
-      // Atualiza produto existente
+      // Atualização com ID
       const updateProductQuery = `
         UPDATE products
         SET name = $1, category_id = $2, price = $3, barcode = $4, ncm = $5,
@@ -362,32 +362,15 @@ const upsertProductAndStock = async (
         category_id || null,
         price,
         barcode || null,
-        ncm,
-        aliquota,
-        cfop,
-        cst,
-        csosn,
+        ncm || null,
+        aliquota || null,
+        cfop || null,
+        cst || null,
+        csosn || null,
         id,
         company_id,
       ]);
 
-      if (productResponse.rowCount === 0) {
-        throw new Error("Produto não encontrado para atualização.");
-      }
-
-      // Upload imagem (se enviada)
-      if (file) {
-        const fileName = await uploadFileToS3(file);
-        imageUrl = `https://${bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
-
-        await client.query(`UPDATE products SET image_url = $1 WHERE id = $2`, [
-          imageUrl,
-          id,
-        ]);
-        productResponse.rows[0].image_url = imageUrl;
-      }
-
-      // Atualiza ou insere estoque
       const upsertStockQuery = `
         INSERT INTO stock (product_id, quantity, company_id)
         VALUES ($1, $2, $3)
@@ -401,50 +384,84 @@ const upsertProductAndStock = async (
         company_id,
       ]);
     } else {
-      // Insere produto sem imagem primeiro
-      const insertProductQuery = `
-        INSERT INTO products (name, category_id, price, company_id, barcode, ncm, aliquota, cfop, cst, csosn)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-        RETURNING *
+      // Verifica se já existe produto com mesmo nome e empresa
+      const existingProductQuery = `
+        SELECT id FROM products WHERE name = $1 AND company_id = $2
       `;
-      productResponse = await client.query(insertProductQuery, [
+      const existing = await client.query(existingProductQuery, [
         name,
-        category_id || null,
-        price,
         company_id,
-        barcode || null,
-        ncm,
-        aliquota,
-        cfop,
-        cst,
-        csosn,
       ]);
 
-      const newProductId = productResponse.rows[0].id;
+      if (existing.rows.length > 0) {
+        // Já existe: atualiza
+        const existingId = existing.rows[0].id;
 
-      // Upload da imagem após obter o ID
-      if (file) {
-        const fileName = await uploadFileToS3(file);
-        imageUrl = `https://${bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
-
-        await client.query(`UPDATE products SET image_url = $1 WHERE id = $2`, [
-          imageUrl,
-          newProductId,
+        const updateProductQuery = `
+          UPDATE products
+          SET category_id = $1, price = $2, barcode = $3, ncm = $4,
+              aliquota = $5, cfop = $6, cst = $7, csosn = $8
+          WHERE id = $9 AND company_id = $10
+          RETURNING *
+        `;
+        productResponse = await client.query(updateProductQuery, [
+          category_id || null,
+          price,
+          barcode || null,
+          ncm || null,
+          aliquota || null,
+          cfop || null,
+          cst || null,
+          csosn || null,
+          existingId,
+          company_id,
         ]);
-        productResponse.rows[0].image_url = imageUrl;
-      }
 
-      // Insere estoque
-      const insertStockQuery = `
-        INSERT INTO stock (product_id, quantity, company_id)
-        VALUES ($1, $2, $3)
-        RETURNING *
-      `;
-      stockResponse = await client.query(insertStockQuery, [
-        newProductId,
-        stockQuantity,
-        company_id,
-      ]);
+        const upsertStockQuery = `
+          INSERT INTO stock (product_id, quantity, company_id)
+          VALUES ($1, $2, $3)
+          ON CONFLICT (product_id, company_id)
+          DO UPDATE SET quantity = EXCLUDED.quantity
+          RETURNING *
+        `;
+        stockResponse = await client.query(upsertStockQuery, [
+          existingId,
+          stockQuantity,
+          company_id,
+        ]);
+      } else {
+        // Não existe: insere
+        const insertProductQuery = `
+          INSERT INTO products (name, category_id, price, company_id, barcode, ncm, aliquota, cfop, cst, csosn)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          RETURNING *
+        `;
+        productResponse = await client.query(insertProductQuery, [
+          name,
+          category_id || null,
+          price,
+          company_id,
+          barcode || null,
+          ncm || null,
+          aliquota || null,
+          cfop || null,
+          cst || null,
+          csosn || null,
+        ]);
+
+        const newProductId = productResponse.rows[0].id;
+
+        const insertStockQuery = `
+          INSERT INTO stock (product_id, quantity, company_id)
+          VALUES ($1, $2, $3)
+          RETURNING *
+        `;
+        stockResponse = await client.query(insertStockQuery, [
+          newProductId,
+          stockQuantity,
+          company_id,
+        ]);
+      }
     }
 
     await client.query("COMMIT");
@@ -453,10 +470,9 @@ const upsertProductAndStock = async (
       product: productResponse.rows[0],
       stock: stockResponse.rows[0],
     };
-  } catch (err) {
+  } catch (error) {
     await client.query("ROLLBACK");
-    console.error("Erro ao criar/atualizar produto e estoque:", err);
-    throw err;
+    throw error;
   } finally {
     client.release();
   }

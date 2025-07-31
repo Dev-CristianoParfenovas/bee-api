@@ -3,7 +3,7 @@ import { updateProductAndStockService } from "../services/service.products.js";
 import stockService from "../services/service.products.js";
 
 // Obter todos os produtos de um cliente
-/*const getProducts = async (req, res) => {
+const getProducts = async (req, res) => {
   const { company_id } = req.params;
   const { search } = req.query; // Pegando o parâmetro de pesquisa da query string
 
@@ -27,8 +27,8 @@ import stockService from "../services/service.products.js";
     console.error("Erro ao buscar produtos:", err.message);
     res.status(500).json({ error: err.message });
   }
-};*/
-const getProducts = async (req, res) => {
+};
+/*const getProducts = async (req, res) => {
   const { company_id } = req.params;
   const { search } = req.query;
 
@@ -44,7 +44,7 @@ const getProducts = async (req, res) => {
     console.error("Erro ao buscar produtos:", err.message);
     return res.status(500).json({ error: err.message });
   }
-};
+};*/
 
 const getStockQuantity = async (req, res) => {
   const { product_id, company_id } = req.params;
@@ -157,11 +157,8 @@ const updateStockByBarcode = async (req, res) => {
 };*/
 
 const createOrUpdateProduct = async (req, res) => {
-  console.log("Arquivo recebido:", req.file);
-
   console.log("Entrou no controller createOrUpdateProduct");
   console.log("Body:", req.body);
-  console.log("File:", req.file);
 
   const {
     id,
@@ -186,12 +183,12 @@ const createOrUpdateProduct = async (req, res) => {
       });
     }
 
-    // req.file vai conter o arquivo (se enviado)
-    const file = req.file || null;
-
-    //Conversão dos tipos
+    // Conversão dos tipos
     const stockQuantity = stock ? parseInt(stock, 10) : 0;
     const priceFloat = parseFloat(price);
+    if (isNaN(priceFloat)) {
+      return res.status(400).json({ message: "Preço inválido." });
+    }
     const categoryIdInt = category_id ? parseInt(category_id, 10) : null;
     const companyIdInt = company_id ? parseInt(company_id, 10) : null;
 
@@ -208,7 +205,6 @@ const createOrUpdateProduct = async (req, res) => {
       cfop,
       cst,
       csosn,
-      file,
     });
 
     return res.status(200).json({
@@ -217,6 +213,14 @@ const createOrUpdateProduct = async (req, res) => {
     });
   } catch (err) {
     console.error("Erro ao criar ou atualizar produto: ", err);
+
+    if (err.code === "23505") {
+      // 23505 = unique_violation no PostgreSQL
+      return res.status(400).json({
+        message: "Produto com esse nome já existe para essa empresa.",
+      });
+    }
+
     return res.status(500).json({
       message: "Erro ao criar ou atualizar produto.",
       error: err.message,
@@ -240,8 +244,6 @@ const updateProductAndStockController = async (req, res) => {
     company_id,
   } = req.body;
 
-  const image_url = req.file?.location || req.body.image_url || null;
-
   try {
     console.log("Dados recebidos no controlador:", {
       product_id,
@@ -254,7 +256,6 @@ const updateProductAndStockController = async (req, res) => {
       cfop,
       cst,
       csosn,
-      image_url,
       quantity,
       company_id,
     });
@@ -272,7 +273,6 @@ const updateProductAndStockController = async (req, res) => {
       !cfop?.trim() ||
       !cst?.trim() ||
       !csosn?.trim() ||
-      !image_url?.trim() ||
       quantity == null ||
       isNaN(quantity) ||
       !company_id

@@ -1,11 +1,26 @@
 import { Router } from "express";
 import imageController from "../controllers/controller.images.js";
+import handleImageUpload from "../middlewares/imageUploadHandler.js";
 
-const roterImage = Router();
+const routerImage = Router();
 
-roterImage.post("/", (req, res) => imageController.createImage);
-roterImage.get("/:productId", (req, res) => imageController.getImagesByProduct);
-roterImage.put("/:id", (req, res) => imageController.updateImage);
-roterImage.delete("/:id", (req, res) => imageController.deleteImage);
+// Inserir imagem
+routerImage.post(
+  "/",
+  handleImageUpload,
+  (req, res, next) => {
+    console.log("Headers:", req.headers);
+    console.log("Body:", req.body);
+    console.log("File:", req.file);
+    next();
+  },
+  imageController.insertImage
+);
 
-export default roterImage;
+// Buscar imagens por produto e empresa
+routerImage.get("/:product_id/:company_id", imageController.getImagesByProduct);
+
+// Deletar imagem
+routerImage.delete("/:image_id/:company_id", imageController.deleteImage);
+
+export default routerImage;

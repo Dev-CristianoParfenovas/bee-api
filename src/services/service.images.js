@@ -1,31 +1,29 @@
 import imageRepository from "../repositories/repository.images.js";
 
-const createImage = async (productId, filePath, description) => {
-  if (!productId || !filePath) {
-    throw new Error("Product ID and file path are required.");
-  }
-  return await imageRepository.createImage(productId, filePath, description);
+const insertImageService = async (
+  product_id,
+  image_url,
+  description,
+  company_id
+) => {
+  return await imageRepository.insertImage(
+    product_id,
+    image_url,
+    description,
+    company_id
+  );
 };
 
-const getImagesByProduct = async (productId) => {
-  if (!productId) {
-    throw new Error("Product ID is required.");
-  }
-  return await imageRepository.getImagesByProduct(productId);
+const getImagesService = async (product_id, company_id) => {
+  return await imageRepository.getImagesByProductId(product_id, company_id);
 };
 
-const updateImage = async (id, filePath, description) => {
-  if (!id) {
-    throw new Error("Image ID is required.");
-  }
-  return await imageRepository.updateImage(id, filePath, description);
+const deleteImageService = async (image_id, company_id) => {
+  return await imageRepository.deleteImageById(image_id, company_id);
 };
 
-const deleteImage = async (id) => {
-  if (!id) {
-    throw new Error("Image ID is required.");
-  }
-  return await imageRepository.deleteImage(id);
+export default {
+  insertImageService,
+  getImagesService,
+  deleteImageService,
 };
-
-export default { createImage, getImagesByProduct, updateImage, deleteImage };

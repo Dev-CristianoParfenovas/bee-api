@@ -4,7 +4,7 @@ import s3 from "../config/s3.js";
 
 const bucketName = process.env.AWS_BUCKET_NAME || "bee-aplicativos-img";
 
-// Multer vai guardar o arquivo em memória (buffer)
+// Multer guarda arquivo em memória (buffer)
 const upload = multer({ storage: multer.memoryStorage() });
 
 export const uploadFileToS3 = async (file) => {
@@ -14,7 +14,8 @@ export const uploadFileToS3 = async (file) => {
     Bucket: bucketName,
     Key: fileName,
     Body: file.buffer,
-    ACL: "public-read",
+    // Removi a linha ACL para evitar erro AccessControlListNotSupported
+    // ACL: "public-read",
     ContentType: file.mimetype,
   };
 

@@ -1,4 +1,4 @@
-import upload, { uploadFileToS3 } from "./upload.js"; // certifique-se que está importando certo
+import upload, { uploadFileToS3 } from "../middlewares/upload.js"; // certifique-se que está importando certo
 
 const uploadSingleImage = (req, res, next) => {
   const uploader = upload.single("image");
@@ -15,17 +15,18 @@ const uploadSingleImage = (req, res, next) => {
       if (req.file) {
         const fileName = await uploadFileToS3(req.file);
         const imageUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.amazonaws.com/${fileName}`;
+
         req.body.image_url = imageUrl; // adiciona ao corpo para o controller
+
+        console.log("URL final da imagem a ser salva no banco:", imageUrl);
       }
       next();
     } catch (uploadError) {
       console.error("Erro ao enviar imagem ao S3:", uploadError);
-      return res
-        .status(500)
-        .json({
-          message: "Falha ao enviar imagem ao S3",
-          error: uploadError.message,
-        });
+      return res.status(500).json({
+        message: "Falha ao enviar imagem ao S3",
+        error: uploadError.message,
+      });
     }
   });
 };

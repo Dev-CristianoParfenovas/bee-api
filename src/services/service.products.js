@@ -124,7 +124,6 @@ const upsertProduct = async (productData) => {
     cfop,
     cst,
     csosn,
-    file,
   } = productData;
 
   // Obtem o caminho da imagem se o arquivo existir
@@ -150,8 +149,7 @@ const upsertProduct = async (productData) => {
     aliquota ? parseFloat(aliquota) : null,
     sanitizedCfop,
     sanitizedCst,
-    sanitizedCsosn,
-    file
+    sanitizedCsosn
   );
 };
 
@@ -166,7 +164,6 @@ export const updateProductAndStockService = async (
   cfop,
   cst,
   csosn,
-  image_url,
   quantity,
   company_id
 ) => {
@@ -182,7 +179,6 @@ export const updateProductAndStockService = async (
       cfop,
       cst,
       csosn,
-      image_url,
       quantity,
       company_id
     );
