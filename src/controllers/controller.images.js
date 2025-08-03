@@ -5,19 +5,12 @@ import { uploadFileToS3 } from "../middlewares/upload.js";
 const insertImage = async (req, res) => {
   try {
     console.log("req.body:", req.body);
-    console.log("req.file:", req.file);
 
-    const { product_id, description, company_id } = req.body;
+    const { product_id, description, company_id, image_url } = req.body;
 
-    if (!product_id || !req.file || !company_id) {
+    if (!product_id || !company_id || !image_url) {
       return res.status(400).json({ error: "Campos obrigatórios ausentes." });
     }
-
-    // 📤 Faz upload da imagem para o S3 e pega o nome do arquivo
-    const fileName = await uploadFileToS3(req.file);
-
-    // 🧠 Constrói a URL pública da imagem (ajuste conforme sua configuração)
-    const image_url = `https://${process.env.AWS_BUCKET_NAME}.s3.amazonaws.com/${fileName}`;
 
     const image = await imageService.insertImageService(
       product_id,
@@ -77,3 +70,13 @@ export default {
   getImagesByProduct,
   deleteImage,
 };
+
+/*    if (!product_id || !req.file || !company_id) {
+      return res.status(400).json({ error: "Campos obrigatórios ausentes." });
+    }
+
+    // 📤 Faz upload da imagem para o S3 e pega o nome do arquivo
+    const fileName = await uploadFileToS3(req.file);
+
+    // 🧠 Constrói a URL pública da imagem (ajuste conforme sua configuração)
+    const image_url = `https://${process.env.AWS_BUCKET_NAME}.s3.amazonaws.com/${fileName}`;*/

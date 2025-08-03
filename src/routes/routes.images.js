@@ -9,6 +9,7 @@ routerImage.post(
   "/",
   handleImageUpload,
   (req, res, next) => {
+    console.log("Recebendo upload de imagem...");
     console.log("Headers:", req.headers);
     console.log("Body:", req.body);
     console.log("File:", req.file);

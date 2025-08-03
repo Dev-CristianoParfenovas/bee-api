@@ -3,7 +3,16 @@ import pool from "../db/connection.js";
 // Função para obter os produtos de uma empresa
 const getProductsByClient = async (company_id, search = "") => {
   const query = `
-    SELECT p.*, COALESCE(s.quantity, 0) AS quantity
+    SELECT
+      p.*,
+      COALESCE(s.quantity, 0) AS quantity,
+      -- Use uma subquery para pegar APENAS UMA image_url por produto
+      (SELECT im.image_url
+       FROM images im
+       WHERE im.product_id = p.id
+       ORDER BY im.id ASC -- Escolha a imagem com o menor ID (geralmente a mais antiga ou a primeira inserida)
+       LIMIT 1
+      ) AS image_url
     FROM products p
     LEFT JOIN stock s ON p.id = s.product_id
     WHERE p.company_id = $1
@@ -14,7 +23,7 @@ const getProductsByClient = async (company_id, search = "") => {
 
   try {
     const result = await pool.query(query, values);
-    return result.rows; // sempre retorna array, vazio se nada encontrado
+    return result.rows;
   } catch (error) {
     console.error("Erro ao buscar produtos: ", error);
     throw new Error("Erro ao buscar produtos");
@@ -337,8 +346,7 @@ const upsertProductAndStock = async (
   aliquota,
   cfop,
   cst,
-  csosn,
-  file
+  csosn
 ) => {
   const client = await pool.connect();
 
@@ -499,13 +507,25 @@ const updateProductAndStock = async (
   try {
     await client.query("BEGIN");
 
-    // Atualizar produto
+    // A query de atualização foi expandida para incluir todos os novos campos.
     const queryProduct = `
       UPDATE products
-      SET name = $1, category_id = $2, price = $3
-      WHERE id = $4 AND company_id = $5
+      SET 
+        name = $1, 
+        category_id = $2, 
+        price = $3,
+        barcode = $4,
+        ncm = $5,
+        aliquota = $6,
+        cfop = $7,
+        cst = $8,
+        csosn = $9,
+        image_url = $10
+      WHERE id = $11 AND company_id = $12
       RETURNING *
     `;
+
+    // A lista de valores foi reordenada para corresponder exatamente à nova query.
     const valuesProduct = [
       name,
       category_id || null,
@@ -520,10 +540,11 @@ const updateProductAndStock = async (
       product_id,
       company_id,
     ];
+
     const productResult = await client.query(queryProduct, valuesProduct);
     const product = productResult.rows[0];
 
-    // Atualizar estoque
+    // Atualizar estoque (esta parte já estava correta)
     const queryStock = `
       UPDATE stock
       SET quantity = $1
@@ -532,6 +553,10 @@ const updateProductAndStock = async (
     `;
     const valuesStock = [quantity, product_id, company_id];
     const stockResult = await client.query(queryStock, valuesStock);
+
+    // --- CORREÇÃO IMPORTANTE AQUI ---
+    // A variável 'stock' precisa ser definida a partir do resultado da query.
+    const stock = stockResult.rows[0];
 
     await client.query("COMMIT");
     return { product, stock };
