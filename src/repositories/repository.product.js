@@ -1,4 +1,5 @@
 import pool from "../db/connection.js";
+import { deleteImage } from "../config/s3.js";
 
 // Função para obter os produtos de uma empresa
 const getProductsByClient = async (company_id, search = "") => {
@@ -679,6 +680,21 @@ const deleteProductAndStock = async (product_id, company_id) => {
       throw new Error("Produto não encontrado ou já excluído");
     }
 
+    // 2. Busca a imagem associada ao produto
+    const imageQuery = `
+      SELECT image_url FROM images WHERE product_id = $1
+    `;
+    const imageResult = await client.query(imageQuery, [product_id]);
+    const image = imageResult.rows[0];
+
+    if (image) {
+      // 3. Deleta a imagem do S3
+      // A URL da imagem pode ser algo como: "https://seu-bucket.s3.amazonaws.com/nome_do_arquivo.jpg"
+      // Pegamos apenas o "nome_do_arquivo.jpg"
+      const imageFileName = image.image_url.split("/").pop();
+      await deleteImage(imageFileName);
+    }
+
     // Excluir estoque
     const queryStock = `
       DELETE FROM stock
@@ -701,7 +717,7 @@ const deleteProductAndStock = async (product_id, company_id) => {
     return productResult.rows[0]; // Retorna o produto excluído
   } catch (err) {
     await client.query("ROLLBACK");
-    console.error("Erro ao excluir produto e estoque: ", err);
+    console.error("Erro ao excluir produto estoque e imagem: ", err);
     throw new Error("Erro ao excluir produto e estoque");
   } finally {
     client.release();

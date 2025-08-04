@@ -1,6 +1,6 @@
 import multer from "multer";
 import { Upload } from "@aws-sdk/lib-storage";
-import s3 from "../config/s3.js";
+import { s3Client } from "../config/s3.js";
 
 const bucketName = process.env.AWS_BUCKET_NAME || "bee-aplicativos-img";
 
@@ -20,7 +20,7 @@ export const uploadFileToS3 = async (file) => {
   };
 
   const parallelUploads3 = new Upload({
-    client: s3,
+    client: s3Client,
     params: uploadParams,
   });
 
