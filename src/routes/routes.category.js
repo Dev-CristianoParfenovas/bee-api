@@ -13,14 +13,14 @@ routercategory.post(
 
 // Buscar uma categoria por ID e company_id
 routercategory.get(
-  "/:category_id/:company_id",
+  "/:category_id",
   jwt.validateJWT,
-  categoryController.getCategoryByIdAndCompanyIdController
+  categoryController.getCategoryByIdController
 );
 
 // Listar todas as categorias de uma empresa
 routercategory.get(
-  "/:company_id",
+  "/",
   jwt.validateJWT,
   categoryController.getCategoriesByCompanyIdController
 );

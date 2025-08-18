@@ -4,14 +4,10 @@ import jwt from "../jwt/token.js";
 const routerproduct = Router();
 
 // Rota para obter todos os produtos de um cliente
-routerproduct.get(
-  "/:company_id",
-  jwt.validateJWT,
-  productController.getProducts
-);
+routerproduct.get("/", jwt.validateJWT, productController.getProducts);
 
 routerproduct.get(
-  "/stock/:company_id/:product_id",
+  "/stock/:product_id",
   jwt.validateJWT,
   productController.getStockQuantity
 );

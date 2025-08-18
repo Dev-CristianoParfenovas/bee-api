@@ -4,52 +4,47 @@ import jwt from "../jwt/token.js";
 
 const routersales = Router();
 
-routersales.post(
-  "/:company_id",
-  jwt.validateJWT,
-  salesController.createSaleController
-);
+// A validação do token injetará o company_id em req
+routersales.post("/", jwt.validateJWT, salesController.createSaleController);
 
 routersales.get(
-  "/most-sold/:company_id",
+  "/most-sold",
+  jwt.validateJWT,
   salesController.getMostSoldProductsByDateRangeController
 );
 
 routersales.get(
-  "/:company_id/date-range",
+  "/date-range",
   jwt.validateJWT,
   salesController.getSalesByDateRangeController
 );
 
 routersales.get(
-  "/:company_id",
+  "/",
   jwt.validateJWT,
   salesController.getSalesByCompanyIdController
 );
 routersales.get(
-  "/:company_id/:id",
+  "/:id",
   jwt.validateJWT,
   salesController.getSaleByIdAndCompanyIdController
 );
 
 routersales.get(
-  "/:company_id/vehicle/:vehicle_id",
+  "/vehicle/:vehicle_id",
   salesController.getSalesByVehicleIdController
 );
 
 routersales.get(
-  "/:company_id/products-by-sale/:saleGroupId",
+  "/products-by-sale/:saleGroupId",
   jwt.validateJWT,
   salesController.getProductsBySaleIdController
 );
 
-routersales.put(
-  "/:company_id/:id",
-  jwt.validateJWT,
-  salesController.updateSaleController
-);
+routersales.put("/:id", jwt.validateJWT, salesController.updateSaleController);
+
 routersales.delete(
-  "/:company_id/:id",
+  "/:id",
   jwt.validateJWT,
   salesController.deleteSaleController
 );

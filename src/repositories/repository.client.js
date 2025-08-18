@@ -22,11 +22,16 @@ const loginClient = async (email, password) => {
   }
 
   // Gerar o token JWT usando a função createJWT
-  const token = jwt.createJWT(client.id_user);
+  const token = jwt.createJWT(client.id_user, client.company_id);
 
   return {
     token,
-    client: { id_user: client.id_user, name: client.name, email: client.email },
+    client: {
+      id_user: client.id_user,
+      name: client.name,
+      email: client.email,
+      company_id: client.company_id,
+    },
   };
 };
 

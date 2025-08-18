@@ -208,20 +208,22 @@ const getSalesByDateRange = async ({
 }) => {
   let query = `
       SELECT
-        sales.id,
-        sales.sale_group_id,
-        sales.unit_price,
-        sales.total_price,
-        sales.sale_date,
-        clients.name AS client_name,
-        employees.name AS employee_name,
-        vehicles.model AS vehicle_model,
-        sales.employee_id
+          sales.id,
+          sales.sale_group_id,
+          sales.unit_price,
+          sales.total_price,
+          sales.sale_date,
+          clients.name AS client_name,
+          employees.name AS employee_name,
+          vehicles.model AS vehicle_model,
+          sales.employee_id,
+          products.name AS product_name  -- ✅ ADICIONE ESTA LINHA
       FROM sales
       LEFT JOIN clients ON sales.id_client = clients.id_client
       LEFT JOIN employees ON sales.employee_id = employees.id_employee
       LEFT JOIN vehicles ON sales.id_vehicle = vehicles.id_vehicle
-    `;
+      LEFT JOIN products ON sales.product_id = products.id  -- ✅ ADICIONE ESTA LINHA
+  `;
 
   const values = [company_id, startDate, endDate];
   let conditions = [
@@ -284,6 +286,45 @@ const getMostSoldProductsByDateRange = async (
   const result = await pool.query(query, [company_id, startDate, endDate]);
   return result.rows;
 };
+
+/*const getMostSoldProductsByDateRange = async (
+  company_id,
+  startDate,
+  endDate
+) => {
+  try {
+    const query = `
+          SELECT 
+              p.id AS product_id, 
+              p.name AS product_name,
+              SUM(s.quantity) AS total_quantity,
+              SUM(s.total_price) AS total_revenue
+          FROM sales s
+          JOIN products p ON s.product_id = p.id
+          WHERE s.company_id = $1
+            AND s.sale_date AT TIME ZONE 'UTC' >= $2::timestamptz 
+            AND s.sale_date AT TIME ZONE 'UTC' < $3::timestamptz
+          GROUP BY p.id, p.name
+          ORDER BY total_quantity DESC
+      `;
+
+    console.log("Parâmetros enviados para o banco de dados:", {
+      company_id,
+      startDate,
+      endDate,
+    });
+
+    const result = await pool.query(query, [company_id, startDate, endDate]);
+
+    // ✅ Adicione este log para ver o resultado exato do banco de dados
+    console.log("Resultado da consulta no backend:", result.rows);
+
+    return result.rows;
+  } catch (error) {
+    console.error("Erro no repository:", error);
+    throw error;
+  }
+};*/
 
 const getProductsBySaleIdRepository = async (saleGroupId, companyId) => {
   try {

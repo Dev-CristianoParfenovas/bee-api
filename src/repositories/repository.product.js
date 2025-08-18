@@ -2,7 +2,7 @@ import pool from "../db/connection.js";
 import { deleteImage } from "../config/s3.js";
 
 // Função para obter os produtos de uma empresa
-const getProductsByClient = async (company_id, search = "") => {
+/*160825 const getProductsByClient = async (company_id, search = "") => {
   const query = `
     SELECT
       p.*,
@@ -21,6 +21,45 @@ const getProductsByClient = async (company_id, search = "") => {
     ORDER BY p.created_at DESC
   `;
   const values = [company_id, `%${search}%`];
+
+  console.log("Company ID no repository:", company_id);
+
+  try {
+    const result = await pool.query(query, values);
+    return result.rows;
+  } catch (error) {
+    console.error("Erro ao buscar produtos: ", error);
+    throw new Error("Erro ao buscar produtos");
+  }
+};*/
+
+const getProductsByClient = async (company_id, search = "") => {
+  let query = `
+    SELECT
+      p.*,
+      COALESCE(s.quantity, 0) AS quantity,
+      (SELECT im.image_url
+       FROM images im
+       WHERE im.product_id = p.id
+       ORDER BY im.id ASC
+       LIMIT 1
+      ) AS image_url
+    FROM products p
+    LEFT JOIN stock s ON p.id = s.product_id
+    WHERE p.company_id = $1
+  `;
+
+  const values = [company_id];
+
+  if (search) {
+    query += ` AND p.name ILIKE $2`;
+    values.push(`%${search}%`);
+  }
+
+  query += ` ORDER BY p.created_at DESC`;
+
+  console.log("Company ID no repository:", company_id);
+  console.log("Search no repository:", search);
 
   try {
     const result = await pool.query(query, values);

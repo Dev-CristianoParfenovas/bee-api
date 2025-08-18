@@ -6,7 +6,8 @@ const insertImage = async (req, res) => {
   try {
     console.log("req.body:", req.body);
 
-    const { product_id, description, company_id, image_url } = req.body;
+    const { product_id, description, image_url } = req.body;
+    const { company_id } = req; // Obtem o company_id do token
 
     if (!product_id || !company_id || !image_url) {
       return res.status(400).json({ error: "Campos obrigatórios ausentes." });
@@ -29,7 +30,8 @@ const insertImage = async (req, res) => {
 // Buscar imagens de um produto
 const getImagesByProduct = async (req, res) => {
   try {
-    const { product_id, company_id } = req.params;
+    const { product_id } = req.params;
+    const { company_id } = req; // Obtem o company_id do token
 
     if (!product_id || !company_id) {
       return res
@@ -48,7 +50,8 @@ const getImagesByProduct = async (req, res) => {
 // Deletar imagem
 const deleteImage = async (req, res) => {
   try {
-    const { image_id, company_id } = req.params;
+    const { image_id } = req.params;
+    const { company_id } = req; // Obtem o company_id do token
 
     const deleted = await imageService.deleteImageService(image_id, company_id);
 

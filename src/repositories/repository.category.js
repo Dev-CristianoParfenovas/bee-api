@@ -23,17 +23,23 @@ const getCategoryByIdAndCompanyId = async (id, company_id) => {
 };
 
 const getCategoriesByCompanyId = async (company_id) => {
-  console.log("company_id recebido no repositório:", company_id); // Confirmação do ID no repositório
-  console.log("Tipo de company_id no repositório:", typeof company_id); // Confirmação do tipo
+  // console.log("company_id recebido no repositório:", company_id); // Confirmação do ID no repositório
+  // console.log("Tipo de company_id no repositório:", typeof company_id); // Confirmação do tipo
 
   try {
+    // Converte o company_id para um número antes de executar a consulta
+    const numericCompanyId = Number(company_id);
+    if (isNaN(numericCompanyId)) {
+      throw new Error("ID da empresa inválido.");
+    }
+
     console.log(
       "Recebendo request para buscar categorias da empresa:",
-      company_id
+      numericCompanyId
     );
 
     const query = `SELECT * FROM categories WHERE company_id = $1`;
-    const values = [company_id];
+    const values = [numericCompanyId];
     const result = await pool.query(query, values);
 
     console.log("Resultado da consulta:", result.rows);

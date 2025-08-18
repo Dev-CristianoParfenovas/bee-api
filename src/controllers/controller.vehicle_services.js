@@ -7,11 +7,12 @@ const createVehicleServiceController = async (req, res) => {
     license_plate,
     model,
     km,
-    company_id,
     employee_id,
     client_id,
     vehicle_id,
   } = req.body;
+
+  const company_id = req.company_id; // ✅ CORREÇÃO: Obtenha o ID da empresa do token
 
   try {
     const client = req.pgClient; // usando o client da transação, se necessário
@@ -46,8 +47,9 @@ const createVehicleServiceController = async (req, res) => {
 // Consulta de trocas de óleo nos próximos 7 dias
 const getUpcomingOilChangesController = async (req, res) => {
   try {
+    const company_id = req.company_id;
     const upcomingChanges =
-      await serviceVehiclesService.getUpcomingOilChangesService();
+      await serviceVehiclesService.getUpcomingOilChangesService(company_id);
     res.status(200).json(upcomingChanges);
   } catch (error) {
     console.error("Erro ao buscar trocas de óleo:", error);

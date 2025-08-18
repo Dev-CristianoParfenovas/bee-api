@@ -4,11 +4,11 @@ import stockService from "../services/service.products.js";
 
 // Obter todos os produtos de um cliente
 const getProducts = async (req, res) => {
-  const { company_id } = req.params;
-  const { search } = req.query; // Pegando o parâmetro de pesquisa da query string
+  const { company_id } = req;
+  const { search } = req.query;
 
-  console.log("Company ID recebido: ", company_id);
-  console.log("Search Term: ", search); // Verifique se o termo de busca está sendo passado corretamente
+  console.log("Company ID recebido no controller:", company_id);
+  console.log("Search recebido:", search);
 
   try {
     const products = await serviceProducts.getProductsByClient(
@@ -17,38 +17,20 @@ const getProducts = async (req, res) => {
     );
 
     if (!products || products.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "Nenhum produto encontrado para este company_id" });
+      return res.status(200).json([]); // devolve array vazio em vez de objeto
     }
 
-    res.status(200).json(products); // Retorna a lista de produtos
+    res.status(200).json(products); // devolve direto o array
   } catch (err) {
     console.error("Erro ao buscar produtos:", err.message);
     res.status(500).json({ error: err.message });
   }
 };
-/*const getProducts = async (req, res) => {
-  const { company_id } = req.params;
-  const { search } = req.query;
-
-  try {
-    const products = await serviceProducts.getProductsByClient(
-      company_id,
-      search
-    );
-
-    // products sempre será array, pode ser vazio
-    return res.status(200).json(products);
-  } catch (err) {
-    console.error("Erro ao buscar produtos:", err.message);
-    return res.status(500).json({ error: err.message });
-  }
-};*/
 
 const getStockQuantity = async (req, res) => {
-  const { product_id, company_id } = req.params;
-  console.log("REQ PARAMS:", { product_id, company_id });
+  const { product_id } = req.params;
+  const { company_id } = req; // <<< Correção: Obtem o company_id do token
+  // console.log("REQ PARAMS:", { product_id, company_id });
 
   if (!product_id || !company_id) {
     return res
@@ -68,104 +50,16 @@ const getStockQuantity = async (req, res) => {
   }
 };
 
-/*280725const createOrUpdateProduct = async (req, res) => {
-  const {
-    id,
-    name,
-    category_id,
-    price,
-    company_id,
-    stock,
-    barcode,
-    ncm,
-    aliquota,
-    cfop,
-    cst,
-    csosn,
-  } = req.body;
-
-  const image_url = req.file ? req.file.location : null;
-
-  try {
-    const result = await serviceProducts.upsertProduct({
-      id, // Passa o id para o serviço
-      name,
-      category_id: category_id || null,
-      price,
-      company_id,
-      stock,
-      barcode: barcode || null,
-      ncm,
-      aliquota,
-      cfop,
-      cst,
-      csosn,
-      image_url,
-    });
-
-    return res.status(200).json({
-      message: "Produto criado ou atualizado com sucesso.",
-      data: result,
-    });
-  } catch (err) {
-    console.error("Erro ao criar ou atualizar produto: ", err);
-    return res.status(500).json({
-      message: "Erro ao criar ou atualizar produto.",
-      error: err.message,
-    });
-  }
-};
-
-//ATUALIZA O ESTOQUE URILIZANDO O CÓDIGO DE BARRAS DO PRODUTO
-const updateStockByBarcode = async (req, res) => {
-  console.log(
-    "Requisição recebida em updateStockByBarcode",
-    req.method,
-    req.path,
-    req.body
-  );
-  const { barcode, quantity, company_id } = req.body;
-
-  console.log("Dados recebidos no controlador:", req.body);
-
-  if (
-    typeof barcode !== "string" ||
-    barcode.trim() === "" ||
-    isNaN(Number(quantity)) ||
-    Number(quantity) <= 0 ||
-    isNaN(Number(company_id)) ||
-    Number(company_id) <= 0
-  ) {
-    return res
-      .status(400)
-      .json({ error: "Dados inválidos para atualizar estoque." });
-  }
-
-  try {
-    const result = await serviceProducts.updateStockByBarcode(
-      barcode,
-      quantity,
-      company_id
-    );
-    return res
-      .status(200)
-      .json({ message: "Estoque atualizado com sucesso", data: result });
-  } catch (error) {
-    console.error("Erro no controller ao atualizar estoque:", error.message);
-    return res.status(400).json({ error: error.message });
-  }
-};*/
-
 const createOrUpdateProduct = async (req, res) => {
-  console.log("Entrou no controller createOrUpdateProduct");
-  console.log("Body:", req.body);
+  // console.log("Entrou no controller createOrUpdateProduct");
+  // console.log("Body:", req.body);
 
+  const { company_id } = req; // <<< Correção: Obtem o company_id do token
   const {
     id,
     name,
     category_id,
     price,
-    company_id,
     stock,
     barcode,
     ncm,
@@ -230,6 +124,7 @@ const createOrUpdateProduct = async (req, res) => {
 
 const updateProductAndStockController = async (req, res) => {
   const { product_id } = req.params;
+  const { company_id } = req; // <<< Correção: Obtem o company_id do token
   const {
     name,
     category_id,
@@ -241,7 +136,6 @@ const updateProductAndStockController = async (req, res) => {
     cst,
     csosn,
     quantity,
-    company_id,
   } = req.body;
 
   try {
@@ -323,15 +217,10 @@ const updateProductAndStockController = async (req, res) => {
 
 //ATUALIZA O ESTOQUE URILIZANDO O CÓDIGO DE BARRAS DO PRODUTO
 const updateStockByBarcode = async (req, res) => {
-  console.log(
-    "Requisição recebida em updateStockByBarcode",
-    req.method,
-    req.path,
-    req.body
-  );
-  const { barcode, quantity, company_id } = req.body;
+  const { barcode, quantity } = req.body;
+  const { company_id } = req; // <<< Correção: Obtem o company_id do token
 
-  console.log("Dados recebidos no controlador:", req.body);
+  //console.log("Dados recebidos no controlador:", req.body);
 
   if (
     typeof barcode !== "string" ||
@@ -363,8 +252,7 @@ const updateStockByBarcode = async (req, res) => {
 
 const deleteProductController = async (req, res) => {
   const { productId } = req.params; // Captura o productId da URL
-  const { companyId } = req.query; // Captura o companyId da query string
-
+  const { companyId } = req; // <<< Correção: Obtem o company_id do token
   try {
     const deletedProduct = await serviceProducts.deleteProductService(
       productId,

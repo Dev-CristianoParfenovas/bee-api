@@ -54,7 +54,8 @@ const createEmployee = async (req, res) => {
 };
 
 const getEmployees = async (req, res) => {
-  const { company_id } = req.params; // Assume que o company_id será passado como parâmetro de rota
+  // Pegue o company_id do token (injetado pelo middleware JWT)
+  const { company_id } = req;
   try {
     const employees = await EmployeeService.getEmployeesByCompany(company_id);
     res.status(200).json(employees); // Retorna a lista de funcionários

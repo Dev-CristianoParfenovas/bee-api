@@ -21,8 +21,8 @@ const loginEmployeeRepository = async (email, password) => {
   const employee = result.rows[0];
 
   // Testando a senha fornecida contra o hash no banco de dados
-  console.log("Senha fornecida: " + password);
-  console.log("Hash armazenado no banco de dados: " + employee.password);
+  //console.log("Senha fornecida: " + password);
+  //console.log("Hash armazenado no banco de dados: " + employee.password);
 
   // Verificar a senha
   const isPasswordValid = await bcrypt.compare(password, employee.password); // Sem .trim()
@@ -42,7 +42,10 @@ const loginEmployeeRepository = async (email, password) => {
   }
 
   // Gerar o token JWT usando a função createJWT
-  const token = jwt.createJWTEmployee(employee.id_employee);
+  const token = jwt.createJWTEmployee(
+    employee.id_employee,
+    employee.company_id
+  );
   const companyId = employee.company_id;
 
   return {
@@ -90,8 +93,13 @@ const createEmployee = async (name, email, phone, password, company_id) => {
       ];
       const updateResult = await pool.query(updateQuery, updateValues);
 
+      //Lógica pra atualizar
       const updatedEmployee = updateResult.rows[0];
-      const token = jwt.createJWTEmployee(updatedEmployee.id_employee);
+      // Agora, passe o company_id para a função de criação do token
+      const token = jwt.createJWTEmployee(
+        updatedEmployee.id_employee,
+        updatedEmployee.company_id
+      );
 
       return { employee: updatedEmployee, token };
     } else {
@@ -112,7 +120,11 @@ const createEmployee = async (name, email, phone, password, company_id) => {
       const insertResult = await pool.query(insertQuery, insertValues);
 
       const newEmployee = insertResult.rows[0];
-      const token = jwt.createJWTEmployee(newEmployee.id_employee);
+      // Agora, passe o company_id para a função de criação do token
+      const token = jwt.createJWTEmployee(
+        newEmployee.id_employee,
+        newEmployee.company_id
+      );
 
       return { employee: newEmployee, token };
     }

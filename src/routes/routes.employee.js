@@ -1,5 +1,6 @@
 import { Router } from "express";
 import employeeController from "../controllers/controller.employee.js";
+import jwt from "../jwt/token.js";
 
 const routeremployee = Router();
 
@@ -7,7 +8,7 @@ routeremployee.post("/", employeeController.createEmployee);
 
 routeremployee.post("/login", employeeController.loginEmployeeController);
 
-// Rota para buscar os funcionários
-routeremployee.get("/:company_id", employeeController.getEmployees);
+// Rota para buscar os funcionários da empresa do usuário logado (SEGURA)
+routeremployee.get("/", jwt.validateJWT, employeeController.getEmployees);
 
 export default routeremployee;

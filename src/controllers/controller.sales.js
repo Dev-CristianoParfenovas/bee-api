@@ -1,13 +1,14 @@
 import salesService from "../services/service.sales.js";
 
-console.log("controller.sales.js carregado");
+//console.log("controller.sales.js carregado");
 
-const createSaleController = async (req, res) => {
-  console.log("➡️  Rota POST /sales chamada");
+/*150825 const createSaleController = async (req, res) => {
+  // console.log("➡️  Rota POST /sales chamada");
+  const company_id = req.company_id; // ✅ CORREÇÃO
   // Garantindo que o corpo da requisição seja tratado como array
   const body = Array.isArray(req.body) ? req.body : [req.body];
 
-  console.log("Dado recebido no controller:", req.body);
+  //console.log("Dado recebido no controller:", req.body);
 
   try {
     // Validação das quantidades de todos os itens, caso seja um array
@@ -33,11 +34,40 @@ const createSaleController = async (req, res) => {
       error: error.message,
     });
   }
+};*/
+
+const createSaleController = async (req, res) => {
+  const company_id = req.company_id;
+  const body = Array.isArray(req.body) ? req.body : [req.body];
+
+  try {
+    // Mapeia o array e adiciona o company_id a cada item
+    const salesWithCompanyId = body.map((sale) => {
+      const parsedQuantity = Number(sale.quantity);
+      if (isNaN(parsedQuantity) || parsedQuantity <= 0) {
+        throw new Error("Quantidade inválida.");
+      }
+      return { ...sale, company_id, quantity: parsedQuantity };
+    });
+
+    const newSales = await salesService.createSaleService(salesWithCompanyId);
+
+    res.status(201).json({
+      message: "Venda(s) criada(s) com sucesso!",
+      sales: newSales,
+    });
+  } catch (error) {
+    console.error("Erro ao criar venda:", error);
+    res.status(500).json({
+      message: "Erro ao criar venda",
+      error: error.message,
+    });
+  }
 };
 
 const getSalesByCompanyIdController = async (req, res) => {
   try {
-    const company_id = parseInt(req.params.company_id);
+    const company_id = req.company_id; // ✅ CORREÇÃO
     const sales = await salesService.getSalesByCompanyIdService(company_id);
     res.status(200).json(sales);
   } catch (error) {
@@ -48,7 +78,8 @@ const getSalesByCompanyIdController = async (req, res) => {
 
 const getSaleByIdAndCompanyIdController = async (req, res) => {
   try {
-    const { id, company_id } = req.params;
+    const { id } = req.params;
+    const company_id = req.company_id; // ✅ CORREÇÃO
     const sale = await salesService.getSaleByIdAndCompanyIdService(
       id,
       company_id
@@ -189,7 +220,8 @@ const getSaleByIdAndCompanyIdController = async (req, res) => {
 
 const getSalesByDateRangeController = async (req, res) => {
   try {
-    const { company_id, vehicle_id: vehicle_id_param } = req.params;
+    const company_id = req.company_id; // ✅ CORREÇÃO
+    const { vehicle_id: vehicle_id_param } = req.params;
     const {
       startDate,
       endDate,
@@ -227,7 +259,8 @@ const getSalesByDateRangeController = async (req, res) => {
 
 const getSalesByVehicleIdController = async (req, res) => {
   try {
-    const { company_id, vehicle_id } = req.params;
+    const { vehicle_id } = req.params;
+    const company_id = req.company_id; // ✅ CORREÇÃO
 
     console.log(
       "Buscando vendas para vehicle_id:",
@@ -265,8 +298,10 @@ const getSalesByVehicleIdController = async (req, res) => {
 //BUSCAPRODUTOS
 const getMostSoldProductsByDateRangeController = async (req, res) => {
   try {
-    const { company_id } = req.params;
+    const company_id = req.company_id;
     const { startDate, endDate } = req.query;
+
+    console.log("Datas recebidas da query:", startDate, endDate);
 
     if (!startDate || !endDate) {
       return res.status(400).json({
@@ -288,8 +323,8 @@ const getMostSoldProductsByDateRangeController = async (req, res) => {
 };
 
 const getProductsBySaleIdController = async (req, res) => {
-  const { saleGroupId, company_id } = req.params;
-
+  const { saleGroupId } = req.params;
+  const company_id = req.company_id; // ✅ CORREÇÃO
   try {
     const products = await salesService.getProductsBySaleIdService(
       saleGroupId,
@@ -306,7 +341,8 @@ const getProductsBySaleIdController = async (req, res) => {
 
 const updateSaleController = async (req, res) => {
   try {
-    const { id, company_id } = req.params;
+    const { id } = req.params;
+    const company_id = req.company_id;
     const saleData = req.body;
     const updatedSale = await salesService.updateSaleService(
       id,
@@ -324,7 +360,8 @@ const updateSaleController = async (req, res) => {
 
 const deleteSaleController = async (req, res) => {
   try {
-    const { id, company_id } = req.params;
+    const { id } = req.params;
+    const company_id = req.company_id; // ✅ CORREÇÃO
     const deletedSale = await salesService.deleteSaleService(id, company_id);
     if (!deletedSale)
       return res.status(404).json({ message: "Venda não encontrada" });

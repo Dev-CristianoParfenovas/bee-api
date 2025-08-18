@@ -1,7 +1,10 @@
 import categoryService from "../services/service.category.js";
 
+// Criar uma nova categoria
 const createCategoryController = async (req, res) => {
-  const { name, company_id, notification } = req.body;
+  const { name, notification } = req.body;
+  const { company_id } = req; // Obtenha o company_id do token
+
   try {
     const category = await categoryService.createCategoryService(
       name,
@@ -10,20 +13,23 @@ const createCategoryController = async (req, res) => {
     );
     return res.status(201).json(category);
   } catch (error) {
-    console.error("Erro ao criar categoria: ", error);
-    return res.status(500).json({ message: "Erro ao criar categoria" });
+    console.error("Erro ao criar categoria:", error.message);
+    return res.status(500).json({
+      error: "Erro ao criar categoria. Tente novamente mais tarde.",
+    });
   }
 };
 
-//Tras a categoria por id company e idcategoria
-const getCategoryByIdAndCompanyIdController = async (req, res) => {
-  const { id, company_id } = req.params;
+// Buscar uma categoria por ID (o company_id vem do token)
+const getCategoryByIdController = async (req, res) => {
+  const { category_id } = req.params;
+  const { company_id } = req; // Obtenha o company_id do token
 
-  console.log("company_id recebido no controlador:", company_id);
+  //console.log("company_id recebido no controlador:", company_id);
 
   try {
     const category = await categoryService.getCategoryByIdAndCompanyIdService(
-      id,
+      category_id,
       company_id
     );
 
@@ -38,11 +44,11 @@ const getCategoryByIdAndCompanyIdController = async (req, res) => {
   }
 };
 
-//Tras todas as categorias do id company
+// Listar todas as categorias da empresa (o company_id vem do token)
 const getCategoriesByCompanyIdController = async (req, res) => {
-  const { company_id } = req.params;
+  const { company_id } = req; // Obtenha o company_id do token
 
-  console.log("company_id recebido no controlador:", company_id);
+  //console.log("company_id recebido no controlador:", company_id);
 
   try {
     const categories = await categoryService.getCategoriesByCompanyIdService(
@@ -65,7 +71,8 @@ const getCategoriesByCompanyIdController = async (req, res) => {
 
 const updateCategoryController = async (req, res) => {
   const { category_id } = req.params;
-  const { name, company_id, notification } = req.body;
+  const { name, notification } = req.body;
+  const { company_id } = req; // Obtenha o company_id do token
   try {
     const category = await categoryService.updateCategoryService(
       category_id,
@@ -84,7 +91,7 @@ const updateCategoryController = async (req, res) => {
 
 const deleteCategoryController = async (req, res) => {
   const category_id = parseInt(req.params.category_id, 10);
-  const company_id = parseInt(req.query.company_id, 10);
+  const { company_id } = req; // Obtenha o company_id do token
 
   if (isNaN(category_id) || isNaN(company_id)) {
     return res
@@ -144,7 +151,7 @@ const deleteCategoryController = async (req, res) => {
 export default {
   createCategoryController,
   getCategoriesByCompanyIdController,
-  getCategoryByIdAndCompanyIdController,
+  getCategoryByIdController,
   updateCategoryController,
   deleteCategoryController,
 };

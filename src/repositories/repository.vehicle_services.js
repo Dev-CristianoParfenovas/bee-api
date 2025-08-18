@@ -92,12 +92,12 @@ const createVehicleService = async (
   return result.rows[0];
 };
 
-const getUpcomingOilChanges = async () => {
+const getUpcomingOilChanges = async (company_id) => {
   const query = `
     SELECT * FROM vehicle_services
     WHERE next_oil_change BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '7 days'
   `;
-  const result = await pool.query(query);
+  const result = await pool.query(query, [company_id]);
   return result.rows;
 };
 

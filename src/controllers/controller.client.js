@@ -3,6 +3,7 @@ import serviceClient from "../services/service.client.js";
 const login = async (req, res) => {
   const { email, password } = req.body;
   try {
+    // O service e o repositório precisam retornar o company_id
     const result = await serviceClient.loginClient(email, password);
     res.status(200).json(result); // Retorna o token e os dados do cliente
   } catch (error) {
@@ -12,7 +13,8 @@ const login = async (req, res) => {
 };
 
 const getClientsByCompany = async (req, res) => {
-  const { company_id } = req.params;
+  // Pegue o company_id do token (injetado pelo middleware JWT)
+  const { company_id } = req;
 
   console.log("company_id recebido no controlador:", company_id);
 
@@ -40,7 +42,9 @@ const getClientsByCompany = async (req, res) => {
 
 // Função para lidar com a criação ou atualização de um cliente
 const createOrUpdateClient = async (req, res) => {
-  const { name, email, phone, password, company_id } = req.body;
+  const { name, email, phone, password } = req.body;
+  // Pegue o company_id do token (injetado pelo middleware JWT)
+  const { company_id } = req;
 
   try {
     const client = await serviceClient.createClient(

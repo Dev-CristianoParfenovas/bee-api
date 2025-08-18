@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "2314e808-6126-486b-8858-0d5bb45c7590"
+      }
+    },
+    "android": {
+      "package": "com.beeaplicativos.beeapi"
+    }
+  }
+}

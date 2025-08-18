@@ -1,7 +1,9 @@
 import serviceVehicles from "../services/service.vehicles.js";
+import bcrypt from "bcrypt";
 
 const createVehicle = async (req, res) => {
-  const { company_id, client_id, license_plate, model, color, year } = req.body;
+  const { client_id, license_plate, model, color, year } = req.body;
+  const company_id = req.company_id; // ✅ CORREÇÃO
 
   try {
     const vehicle = await serviceVehicles.createVehicle(
@@ -27,7 +29,8 @@ const createVehicle = async (req, res) => {
 };
 
 const getVehiclesByClient = async (req, res) => {
-  const { company_id, client_id } = req.params;
+  const { client_id } = req.params;
+  const company_id = req.company_id; // ✅ CORREÇÃO
 
   try {
     const vehicles = await serviceVehicles.getVehiclesByClient(
@@ -54,10 +57,15 @@ const getVehiclesByClient = async (req, res) => {
 
 // *** Aqui está a função de login do veículo ***
 const loginVehicle = async (req, res) => {
-  const { license_plate } = req.body;
+  const { license_plate, password } = req.body; // Se for usar senha, a adicione aqui
+  const company_id = req.company_id; // ✅ CORREÇÃO - Para filtrar o login por empresa
 
   try {
-    const loginResult = await serviceVehicles.loginVehicle(license_plate);
+    const loginResult = await serviceVehicles.loginVehicle(
+      license_plate,
+      password,
+      company_id
+    );
 
     return res.status(200).json({
       message: "Login realizado com sucesso",
@@ -75,9 +83,13 @@ const loginVehicle = async (req, res) => {
 
 const deleteVehicle = async (req, res) => {
   const { id_vehicle } = req.params;
+  const company_id = req.company_id; // ✅ CORREÇÃO
 
   try {
-    const deletedVehicle = await serviceVehicles.deleteVehicle(id_vehicle);
+    const deletedVehicle = await serviceVehicles.deleteVehicle(
+      id_vehicle,
+      company_id
+    );
 
     return res.status(200).json({
       message: "Veículo deletado com sucesso.",
