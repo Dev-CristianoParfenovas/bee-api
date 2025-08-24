@@ -7,7 +7,7 @@ const routerproduct = Router();
 routerproduct.get("/", jwt.validateJWT, productController.getProducts);
 
 routerproduct.get(
-  "/stock/:product_id",
+  "/stock/:productId",
   jwt.validateJWT,
   productController.getStockQuantity
 );
@@ -27,7 +27,7 @@ routerproduct.put(
 
 // Rota para atualizar um produto e seu estoque
 routerproduct.put(
-  "/:product_id",
+  "/:productId",
   jwt.validateJWT,
   productController.updateProductAndStockController
 );

@@ -74,8 +74,27 @@ const getEmployeesByCompany = async (company_id) => {
   }
 };
 
+const deleteEmployeeService = async (employee_id, company_id) => {
+  try {
+    const deletedEmployee = await employeeRepository.deleteEmployee(
+      employee_id,
+      company_id
+    );
+
+    if (!deletedEmployee) {
+      return null; // Controller vai tratar
+    }
+
+    return deletedEmployee;
+  } catch (error) {
+    console.error("Erro no service ao deletar funcionário:", error);
+    throw new Error("Erro ao excluir funcionário");
+  }
+};
+
 export default {
   createEmployee,
   loginEmployeeService,
   getEmployeesByCompany, // Nova função
+  deleteEmployeeService,
 };

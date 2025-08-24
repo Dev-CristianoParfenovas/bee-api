@@ -250,7 +250,7 @@ const updateStockByBarcode = async (req, res) => {
   }
 };
 
-const deleteProductController = async (req, res) => {
+/*const deleteProductController = async (req, res) => {
   const { productId } = req.params; // Captura o productId da URL
   const { companyId } = req; // <<< Correção: Obtem o company_id do token
   try {
@@ -265,6 +265,45 @@ const deleteProductController = async (req, res) => {
     });
   } catch (error) {
     console.error("Erro no controlador ao deletar produto:", error.message);
+    res.status(500).json({ error: "Erro ao excluir produto" });
+  }
+};*/
+
+const deleteProductController = async (req, res) => {
+  const { productId } = req.params; // Captura o productId da URL
+  const { company_id } = req; // Obtem o company_id do token
+
+  try {
+    console.log(`[CONTROLLER] Tentando deletar produto com ID: ${productId}`);
+    const parsedProductId = parseInt(productId, 10);
+    console.log(`[CONTROLLER] ID após parseInt: ${parsedProductId}`);
+    if (isNaN(parsedProductId)) {
+      return res.status(400).json({
+        message: "ID do produto inválido.",
+      });
+    }
+
+    const deletedProduct = await serviceProducts.deleteProductService(
+      parsedProductId,
+      company_id
+    );
+
+    if (!deletedProduct) {
+      // Produto não encontrado ou já excluído
+      return res.status(404).json({
+        message: "Produto não encontrado ou já excluído",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Produto excluído com sucesso",
+      product: deletedProduct,
+    });
+  } catch (error) {
+    console.error(
+      "Erro no controlador ao deletar produto (imagem opcional):",
+      error.message
+    );
     res.status(500).json({ error: "Erro ao excluir produto" });
   }
 };

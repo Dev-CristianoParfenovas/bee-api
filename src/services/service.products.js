@@ -201,7 +201,7 @@ export const updateProductAndStockService = async (
   }
 };
 
-const deleteProductService = async (product_id, company_id) => {
+/*const deleteProductService = async (product_id, company_id) => {
   try {
     const deletedProduct = await productRepository.deleteProductAndStock(
       product_id,
@@ -215,6 +215,37 @@ const deleteProductService = async (product_id, company_id) => {
     return deletedProduct;
   } catch (error) {
     console.error("Erro ao deletar produto no serviço:", error);
+    throw new Error("Erro ao excluir produto");
+  }
+};*/
+
+const deleteProductService = async (product_id, company_id) => {
+  try {
+    console.log(
+      `[SERVICE] Recebeu product_id: ${product_id} e company_id: ${company_id}`
+    );
+    const deletedProduct = await productRepository.deleteProductAndStock(
+      product_id,
+      company_id
+    );
+
+    // Se o produto não existir, retorna null para o controller tratar
+    if (!deletedProduct) {
+      console.warn(
+        `[SERVICE] Produto ${product_id} não encontrado para empresa ${company_id}`
+      );
+      return null;
+    }
+
+    console.log(
+      `[SERVICE] Produto ${product_id} deletado com sucesso da empresa ${company_id}`
+    );
+    return deletedProduct;
+  } catch (error) {
+    console.error(
+      "Erro ao deletar produto no serviço (imagem opcional):",
+      error
+    );
     throw new Error("Erro ao excluir produto");
   }
 };

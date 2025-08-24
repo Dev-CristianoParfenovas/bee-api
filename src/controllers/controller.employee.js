@@ -11,7 +11,7 @@ const loginEmployeeController = async (req, res) => {
   }
 };
 
-const createEmployee = async (req, res) => {
+/* 230825const createEmployee = async (req, res) => {
   const { name, email, phone, password, company_id } = req.body; // is_admin removido
 
   console.log("Dados recebidos no body:", req.body);
@@ -51,6 +51,41 @@ const createEmployee = async (req, res) => {
       error: error.message,
     });
   }
+};*/
+
+const createEmployee = async (req, res) => {
+  const { name, email, phone, password, company_id } = req.body;
+
+  console.log("Dados recebidos no body:", req.body);
+
+  if (!name || !email || !company_id) {
+    return res.status(400).json({
+      message: "Os campos obrigatórios são: name, email, company_id.",
+    });
+  }
+
+  try {
+    const employee = await EmployeeService.createEmployee(
+      name,
+      email,
+      phone || null,
+      password, // senha opcional para edição
+      company_id
+    );
+
+    res.status(200).json({
+      message: "Funcionário criado ou atualizado com sucesso.",
+      employee,
+    });
+  } catch (error) {
+    console.error(
+      "Erro no controller ao criar ou atualizar funcionário:",
+      error
+    );
+    res.status(400).json({
+      message: error.message,
+    });
+  }
 };
 
 const getEmployees = async (req, res) => {
@@ -65,8 +100,35 @@ const getEmployees = async (req, res) => {
   }
 };
 
+const deleteEmployeeController = async (req, res) => {
+  const { employeeId } = req.params;
+  const { company_id } = req; // obtido via JWT
+
+  try {
+    const deletedEmployee = await EmployeeService.deleteEmployeeService(
+      employeeId,
+      company_id
+    );
+
+    if (!deletedEmployee) {
+      return res.status(404).json({
+        message: "Funcionário não encontrado ou já excluído",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Funcionário excluído com sucesso",
+      employee: deletedEmployee,
+    });
+  } catch (error) {
+    console.error("Erro ao deletar funcionário:", error);
+    return res.status(500).json({ error: "Erro ao excluir funcionário" });
+  }
+};
+
 export default {
+  getEmployees, // Nova função
   createEmployee,
   loginEmployeeController,
-  getEmployees, // Nova função
+  deleteEmployeeController,
 };

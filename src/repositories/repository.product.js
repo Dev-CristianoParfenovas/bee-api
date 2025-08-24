@@ -763,6 +763,66 @@ const deleteProductAndStock = async (product_id, company_id) => {
   }
 };
 
+/*const deleteProductAndStock = async (product_id, company_id) => {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    // 1️⃣ Verifica se o produto existe
+    const productCheckResult = await client.query(
+      `SELECT * FROM products WHERE id = $1 AND company_id = $2`,
+      [product_id, company_id]
+    );
+
+    if (productCheckResult.rows.length === 0) {
+      throw new Error("Produto não encontrado ou já excluído");
+    }
+
+    console.log(
+      `[REPOSITORY] Buscando produto com ID: ${product_id} e Company ID: ${company_id}`
+    );
+    // 2️⃣ Busca imagem associada (opcional)
+    const imageResult = await client.query(
+      `SELECT image_url FROM images WHERE product_id = $1 AND company_id = $2`,
+      [product_id, company_id]
+    );
+    const image = imageResult.rows[0];
+
+    if (image && image.image_url) {
+      try {
+        const imageFileName = image.image_url.split("/").pop();
+        await deleteImage(imageFileName);
+      } catch (err) {
+        console.error("Erro ao deletar imagem do S3 (ignorado):", err);
+        // não throw para não bloquear a exclusão do produto
+      }
+    }
+
+    // 3️⃣ Exclui estoque se existir
+    const stockResult = await client.query(
+      `DELETE FROM stock WHERE product_id = $1 AND company_id = $2 RETURNING *`,
+      [product_id, company_id]
+    );
+    console.log(`Estoque removido: ${stockResult.rowCount} item(s)`);
+
+    // 4️⃣ Exclui produto
+    const productResult = await client.query(
+      `DELETE FROM products WHERE id = $1 AND company_id = $2 RETURNING *`,
+      [product_id, company_id]
+    );
+
+    await client.query("COMMIT");
+    return productResult.rows[0]; // retorna produto excluído
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error("Erro ao excluir produto e estoque:", err);
+    throw new Error("Erro ao excluir produto");
+  } finally {
+    client.release();
+  }
+};*/
+
 export default {
   getProductsByClient,
   upsertProductAndStock,
