@@ -32,13 +32,13 @@ const updateStockByBarcode = async (barcode, quantityToAdd, company_id) => {
   }
 };
 
-const getStockQuantity = async (product_id, company_id) => {
-  if (!product_id || !company_id) {
+const getStockQuantity = async (productId, company_id) => {
+  if (!productId || !company_id) {
     throw new Error("Produto e empresa são obrigatórios");
   }
 
   const quantity = await productRepository.getStockQuantityByProduct(
-    product_id,
+    productId,
     company_id
   );
   return quantity;

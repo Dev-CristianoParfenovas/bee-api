@@ -679,12 +679,12 @@ const updateStockByBarcode = async (barcode, quantityToAdd, company_id) => {
   }
 };
 
-const getStockQuantityByProduct = async (product_id, company_id) => {
+const getStockQuantityByProduct = async (productId, company_id) => {
   const query = `
     SELECT quantity FROM stock
     WHERE product_id = $1 AND company_id = $2
   `;
-  const values = [product_id, company_id];
+  const values = [productId, company_id];
   try {
     const result = await pool.query(query, values);
     return result.rows[0]?.quantity ?? 0;

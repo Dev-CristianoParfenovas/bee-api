@@ -43,7 +43,7 @@ const createCompanyAndEmployee = async (name, email, password, is_admin) => {
     const employee = employeeResult.rows[0]; // Aqui, estamos pegando os dados do funcionário
 
     // Gera o token JWT para o novo funcionário
-    const token = jwt.createJWTEmployee(employee.id_employee);
+    const token = jwt.createJWTEmployee(employee.id_employee, companyId);
 
     // Confirma a transação
     await pool.query("COMMIT");

@@ -28,21 +28,21 @@ const getProducts = async (req, res) => {
 };
 
 const getStockQuantity = async (req, res) => {
-  const { product_id } = req.params;
+  const { productId } = req.params;
   const { company_id } = req; // <<< Correção: Obtem o company_id do token
-  // console.log("REQ PARAMS:", { product_id, company_id });
 
-  if (!product_id || !company_id) {
+  console.log("🔍 DEBUG getStockQuantity:");
+  console.log("  ➝ productId recebido:", productId);
+  console.log("  ➝ company_id do token:", company_id);
+
+  if (!productId || !company_id) {
     return res
       .status(400)
-      .json({ error: "product_id e company_id são obrigatórios" });
+      .json({ error: "productId  e company_id são obrigatórios" });
   }
 
   try {
-    const quantity = await stockService.getStockQuantity(
-      product_id,
-      company_id
-    );
+    const quantity = await stockService.getStockQuantity(productId, company_id);
     return res.status(200).json({ quantity });
   } catch (err) {
     console.error("Erro no controller ao buscar quantidade de estoque:", err);
@@ -51,9 +51,6 @@ const getStockQuantity = async (req, res) => {
 };
 
 const createOrUpdateProduct = async (req, res) => {
-  // console.log("Entrou no controller createOrUpdateProduct");
-  // console.log("Body:", req.body);
-
   const { company_id } = req; // <<< Correção: Obtem o company_id do token
   const {
     id,
@@ -107,6 +104,14 @@ const createOrUpdateProduct = async (req, res) => {
     });
   } catch (err) {
     console.error("Erro ao criar ou atualizar produto: ", err);
+
+    // Verifica se é o erro de duplicidade lançado pelo repository
+    if (err.message.includes("duplicado")) {
+      return res.status(400).json({
+        message:
+          "Produto com mesmo nome ou código de barras já existe para esta empresa.",
+      });
+    }
 
     if (err.code === "23505") {
       // 23505 = unique_violation no PostgreSQL
